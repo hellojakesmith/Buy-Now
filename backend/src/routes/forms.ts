@@ -5,6 +5,29 @@ import { processFormSubmission } from "../services/forms.js";
 
 export const formsRouter = Router();
 
+async function generateUniqueSlug(workspaceId: string, candidate: string, excludeFormId?: string) {
+  const base = normalizeSlug(candidate) || "form";
+  let suffix = 0;
+  let slug = base;
+
+  while (
+    await FormModel.exists({
+      workspaceId,
+      slug,
+      ...(excludeFormId ? { _id: { $ne: excludeFormId } } : {}),
+    })
+  ) {
+    suffix += 1;
+    slug = `${base}-${suffix + 1}`;
+  }
+
+  return slug;
+}
+
+function buildPublicFormPath(slug: string) {
+  return `/public/forms/${slug}`;
+}
+
 formsRouter.get(
   "/",
   asyncRoute(async (req, res) => {
@@ -21,7 +44,7 @@ formsRouter.post(
     const name = String(req.body.name ?? "").trim();
     if (!name) throw new AppError(400, "name is required");
 
-    const slug = normalizeSlug(String(req.body.slug ?? name));
+    const slug = await generateUniqueSlug(context.workspaceId, String(req.body.slug ?? name));
 
     const form = await FormModel.create({
       workspaceId: context.workspaceId,
@@ -31,7 +54,10 @@ formsRouter.post(
       description: req.body.description,
       fields: req.body.fields ?? [],
       submitAction: req.body.submitAction ?? {},
-      publishSettings: req.body.publishSettings ?? {},
+      publishSettings: {
+        ...(req.body.publishSettings ?? {}),
+        path: buildPublicFormPath(slug),
+      },
       status: req.body.status ?? "draft",
     });
 
@@ -53,13 +79,23 @@ formsRouter.patch(
   "/:id",
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
+    const formId = String(req.params.id);
+    const nextSlug = req.body.slug
+      ? await generateUniqueSlug(context.workspaceId, String(req.body.slug), formId)
+      : undefined;
     const form = await FormModel.findOneAndUpdate(
-      { _id: parseObjectId(String(req.params.id), "form id"), workspaceId: context.workspaceId },
+      { _id: parseObjectId(formId, "form id"), workspaceId: context.workspaceId },
       {
         ...req.body,
         workspaceId: context.workspaceId,
         ownerUserId: context.userId,
-        slug: req.body.slug ? normalizeSlug(String(req.body.slug)) : undefined,
+        ...(nextSlug ? {
+          slug: nextSlug,
+          publishSettings: {
+            ...(req.body.publishSettings ?? {}),
+            path: buildPublicFormPath(nextSlug),
+          },
+        } : {}),
       },
       { new: true },
     );
@@ -72,13 +108,19 @@ formsRouter.post(
   "/:id/publish",
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
+    const formId = parseObjectId(String(req.params.id), "form id");
+    const existingForm = await FormModel.findOne({ _id: formId, workspaceId: context.workspaceId })
+      .select({ slug: 1 })
+      .lean<{ slug: string }>();
+    if (!existingForm) throw new AppError(404, "Form not found");
+
     const form = await FormModel.findOneAndUpdate(
-      { _id: parseObjectId(String(req.params.id), "form id"), workspaceId: context.workspaceId },
+      { _id: formId, workspaceId: context.workspaceId },
       {
         status: "published",
         publishSettings: {
           ...(req.body.publishSettings ?? {}),
-          path: req.body.publishSettings?.path ?? `/f/${req.params.id}`,
+          path: buildPublicFormPath(existingForm.slug),
         },
       },
       { new: true },

@@ -91,7 +91,7 @@ type BackendActivity = {
   occurredAt?: string;
 };
 
-type BackendForm = {
+export type BackendForm = {
   _id: string;
   name: string;
   slug: string;

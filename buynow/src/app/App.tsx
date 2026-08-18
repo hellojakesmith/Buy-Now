@@ -10,13 +10,14 @@ import {
 import {
   AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip
 } from "recharts";
-import { useAppData, type LeadUI, type OpportunityUI, type ProductUI, type OrderUI, type NotificationUI, type AnalyticsPoint } from "./lib/useAppData";
+import { buildApiUrl } from "./lib/api";
+import { useAppData, type LeadUI, type OpportunityUI, type ProductUI, type OrderUI, type NotificationUI, type AnalyticsPoint, type BackendForm } from "./lib/useAppData";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Screen =
   | "home" | "leads" | "lead-detail" | "pipeline" | "opp-detail"
   | "more" | "analytics" | "orders" | "notifications" | "settings"
-  | "form-templates" | "form-editor" | "form-published"
+  | "forms" | "form-templates" | "form-editor" | "form-published"
   | "landing-templates" | "product-create" | "checkout-preview" | "products";
 
 type Tab = "home" | "leads" | "pipeline" | "more";
@@ -685,9 +686,10 @@ function OppDetailScreen({ opp, goBack }: { opp: (typeof OPPS)[0]; goBack: () =>
 }
 
 // ── More Screen ────────────────────────────────────────────────────────────────
-function MoreScreen({ navigate, summary, products, notifications, orders, workspaceName, userName, userEmail }: {
+function MoreScreen({ navigate, summary, forms, products, notifications, orders, workspaceName, userName, userEmail }: {
   navigate: (s: Screen) => void;
   summary: { counts: { contacts: number; opportunities: number; orders: number; submissions: number; products: number; pages: number; notifications: number }; revenue: number };
+  forms: BackendForm[];
   products: ProductUI[];
   notifications: NotificationUI[];
   orders: OrderUI[];
@@ -697,6 +699,7 @@ function MoreScreen({ navigate, summary, products, notifications, orders, worksp
 }) {
   const items = [
     { Icon: BarChart2, label: "Analytics", desc: `${summary.counts.contacts} contacts · ${summary.counts.submissions} submissions`, screen: "analytics", color: "#0325D9", bg: "#E9EDFF" },
+    { Icon: FileText, label: "Forms", desc: forms.length ? `${forms.length} form${forms.length === 1 ? "" : "s"} created` : "No forms yet", screen: "forms", color: "#0325D9", bg: "#E9EDFF" },
     { Icon: ShoppingCart, label: "Orders", desc: `${summary.counts.orders} orders · $${summary.revenue.toLocaleString()} revenue`, screen: "orders", color: "#16B879", bg: "#E8F8F1" },
     { Icon: Layout, label: "Pages", desc: `${summary.counts.pages} published landing pages`, screen: "landing-templates", color: "#7448F6", bg: "#EEE9FF" },
     { Icon: Package, label: "Products", desc: `${summary.counts.products} active products`, screen: "products", color: "#FF8A00", bg: "#FFF3E5" },
@@ -815,6 +818,86 @@ function AnalyticsScreen({ data, goBack, summary }: { data: AnalyticsPoint[]; su
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Forms Screen ────────────────────────────────────────────────────────────────
+function FormsScreen({ goBack, navigate, forms, onSelect }: {
+  goBack: () => void;
+  navigate: (s: Screen) => void;
+  forms: BackendForm[];
+  onSelect: (form: BackendForm) => void;
+}) {
+  const statusStyle: Record<string, { color: string; bg: string; label: string }> = {
+    published: { color: "#16B879", bg: "#E8F8F1", label: "Published" },
+    draft: { color: "#FF8A00", bg: "#FFF3E5", label: "Draft" },
+    archived: { color: "#6B7280", bg: "#F7F8FC", label: "Archived" },
+  };
+
+  return (
+    <div className="pb-8">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEF0F5]">
+        <button onClick={goBack} className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F7F8FC]">
+          <ChevronLeft size={18} color="#111111" />
+        </button>
+        <span className="font-bold text-[17px] text-[#111111]">Forms</span>
+        <button onClick={() => navigate("form-templates")} className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0325D9]">
+          <Plus size={16} color="white" />
+        </button>
+      </div>
+
+      {forms.length === 0 ? (
+        <div className="px-4 pt-16 flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-[18px] flex items-center justify-center mb-4" style={{ background: "linear-gradient(135deg, #E9EDFF, #EEE9FF)" }}>
+            <FileText size={26} color="#0325D9" />
+          </div>
+          <div className="font-bold text-[16px] text-[#111111]">No forms yet</div>
+          <div className="text-[13px] text-[#6B7280] mt-1 mb-5 max-w-[240px]">Create your first lead form to start capturing submissions.</div>
+          <button
+            onClick={() => navigate("form-templates")}
+            className="px-5 py-3 rounded-[14px] text-[14px] font-semibold text-white bg-[#0325D9]"
+          >
+            Create a Form
+          </button>
+        </div>
+      ) : (
+        <div className="px-4 pt-4 space-y-3">
+          {forms.map((form) => {
+            const status = statusStyle[form.status ?? "draft"] ?? statusStyle.draft;
+            return (
+              <button
+                key={form._id}
+                onClick={() => onSelect(form)}
+                className="w-full p-4 rounded-[16px] border border-[#EEF0F5] bg-white text-left"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg, #E9EDFF, #EEE9FF)" }}>
+                    <FileText size={20} color="#0325D9" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-bold text-[14px] text-[#111111] truncate">{form.name}</div>
+                      <span className="flex-shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ color: status.color, background: status.bg }}>
+                        {status.label}
+                      </span>
+                    </div>
+                    {form.publishSettings?.path && (
+                      <div className="text-[12px] text-[#6B7280] truncate mt-0.5">{form.publishSettings.path}</div>
+                    )}
+                    <div className="flex items-center gap-3 mt-2 text-[12px] text-[#9CA3AF]">
+                      <span>{form.fields?.length ?? 0} fields</span>
+                      <span>·</span>
+                      <span>{form.stats?.submissions ?? 0} submissions</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1072,7 +1155,19 @@ function FormEditorScreen({
 }
 
 // ── Form Published Screen ──────────────────────────────────────────────────────
-function FormPublishedScreen({ goBack }: { goBack: () => void }) {
+function FormPublishedScreen({ goBack, shareUrl }: { goBack: () => void; shareUrl: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyShareUrl = async () => {
+    if (!shareUrl) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
     <div className="pb-8">
       <ScreenHeader title="Form Published" onBack={goBack} />
@@ -1088,17 +1183,17 @@ function FormPublishedScreen({ goBack }: { goBack: () => void }) {
 
         <div className="w-full p-4 rounded-[16px] bg-[#F7F8FC] border border-[#EEF0F5] text-left">
           <div className="text-[11px] font-semibold text-[#9CA3AF] mb-1">Form URL</div>
-          <div className="text-[13px] font-semibold text-[#0325D9]">app.leadflow.io/f/consultation</div>
+          <div className="break-all text-[13px] font-semibold text-[#0325D9]">{shareUrl || "No share link available"}</div>
         </div>
 
         <div className="w-full grid grid-cols-2 gap-3">
           {[
-            { Icon: Copy, label: "Copy Link", color: "#0325D9", bg: "#E9EDFF" },
+            { Icon: Copy, label: copied ? "Copied" : "Copy Link", color: "#0325D9", bg: "#E9EDFF", onClick: copyShareUrl },
             { Icon: Share2, label: "Share", color: "#7448F6", bg: "#EEE9FF" },
             { Icon: Eye, label: "Preview", color: "#16B879", bg: "#E8F8F1" },
             { Icon: Edit3, label: "Edit Form", color: "#FF8A00", bg: "#FFF3E5" },
-          ].map(({ Icon, label, color, bg }) => (
-            <button key={label} className="flex items-center gap-2.5 p-3.5 rounded-[14px]" style={{ background: bg }}>
+          ].map(({ Icon, label, color, bg, onClick }) => (
+            <button key={label} onClick={onClick} className="flex items-center gap-2.5 p-3.5 rounded-[14px]" style={{ background: bg }}>
               <Icon size={16} color={color} />
               <span className="font-semibold text-[13px]" style={{ color }}>{label}</span>
             </button>
@@ -1113,9 +1208,9 @@ function FormPublishedScreen({ goBack }: { goBack: () => void }) {
           <button className="mt-3 text-[13px] font-semibold text-[#0325D9]">Download QR Code</button>
         </div>
 
-        <button className="w-full font-bold text-[16px] text-white rounded-xl bg-[#0325D9]"
+        <button onClick={copyShareUrl} className="w-full font-bold text-[16px] text-white rounded-xl bg-[#0325D9]"
           style={{ height: 52, boxShadow: "0 8px 24px rgba(3,37,217,0.25)" }}>
-          Share Form
+          {copied ? "Link Copied" : "Share Form"}
         </button>
       </div>
     </div>
@@ -1364,14 +1459,14 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadUI | null>(null);
   const [selectedOpp, setSelectedOpp] = useState<OpportunityUI | null>(null);
-  const [selectedForm, setSelectedForm] = useState<{ _id: string; name: string; slug: string; fields?: Array<{ label: string; type: string; required?: boolean }> } | null>(null);
+  const [selectedForm, setSelectedForm] = useState<{ _id: string; name: string; slug: string; fields?: Array<{ label: string; type: string; required?: boolean }>; publishSettings?: { path?: string } } | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<{ name: string; price: number; description?: string } | null>(null);
   const [pipelineStage, setPipelineStage] = useState(0);
   const [filterTab, setFilterTab] = useState("All");
 
   const DETAIL_SCREENS: Screen[] = [
     "lead-detail", "opp-detail", "analytics", "orders", "notifications",
-    "settings", "form-templates", "form-editor", "form-published",
+    "settings", "forms", "form-templates", "form-editor", "form-published",
     "landing-templates", "product-create", "checkout-preview", "products",
   ];
 
@@ -1384,7 +1479,8 @@ export default function App() {
   const goBack = () => {
     if (screen === "lead-detail") { setScreen("leads"); setActiveTab("leads"); }
     else if (screen === "opp-detail") { setScreen("pipeline"); setActiveTab("pipeline"); }
-    else if (["analytics", "orders", "notifications", "settings", "products"].includes(screen)) { setScreen("more"); setActiveTab("more"); }
+    else if (["analytics", "orders", "notifications", "settings", "products", "forms"].includes(screen)) { setScreen("more"); setActiveTab("more"); }
+    else if (screen === "form-templates" || screen === "form-editor" || screen === "form-published") { setScreen("forms"); setActiveTab("more"); }
     else { setScreen("home"); setActiveTab("home"); }
   };
 
@@ -1398,7 +1494,13 @@ export default function App() {
     name: data.forms[0].name,
     slug: data.forms[0].slug,
     fields: data.forms[0].fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
+    publishSettings: data.forms[0].publishSettings,
   } : null);
+  const currentFormShareUrl = currentForm?.publishSettings?.path
+    ? buildApiUrl(currentForm.publishSettings.path)
+    : currentForm?.slug
+      ? buildApiUrl(`/public/forms/${currentForm.slug}`)
+      : "";
 
   const startBlankForm = async (templateName?: string) => {
     const templateMap: Record<string, { description: string; fields: Array<{ key: string; label: string; type: string; required: boolean; order: number }> }> = {
@@ -1423,7 +1525,6 @@ export default function App() {
     const selectedTemplate = templateName ? templateMap[templateName] : null;
     const form = await data.createForm({
       name: templateName ?? "New Lead Form",
-      slug: templateName ?? "new-lead-form",
       description: selectedTemplate?.description ?? "Tell us a little about yourself.",
       fields: selectedTemplate?.fields ?? [
         { key: "name", label: "Name", type: "Short Text", required: true, order: 0 },
@@ -1431,7 +1532,6 @@ export default function App() {
         { key: "interest", label: "What are you interested in?", type: "Multiple Choice", required: false, order: 2 },
       ],
       submitAction: { createContact: true, createOpportunity: false, pipelineStage: "new" },
-      publishSettings: { path: "/f/new-lead-form", qrCodeEnabled: true, embedEnabled: true },
       status: "draft",
     });
     setSelectedForm({
@@ -1439,6 +1539,7 @@ export default function App() {
       name: form.name,
       slug: form.slug,
       fields: form.fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
+      publishSettings: form.publishSettings,
     });
     navigate("form-editor");
   };
@@ -1458,7 +1559,14 @@ export default function App() {
     if (!currentForm) {
       return;
     }
-    await data.publishForm(currentForm._id, { publishSettings: { path: `/f/${currentForm.slug}` } });
+    const published = await data.publishForm(currentForm._id);
+    setSelectedForm({
+      _id: published._id,
+      name: published.name,
+      slug: published.slug,
+      fields: published.fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
+      publishSettings: published.publishSettings,
+    });
     navigate("form-published");
   };
 
@@ -1593,6 +1701,7 @@ export default function App() {
             <MoreScreen
               navigate={navigate}
               summary={data.summary}
+              forms={data.forms}
               products={data.products}
               notifications={data.notifications}
               orders={data.orders}
@@ -1605,9 +1714,26 @@ export default function App() {
           {screen === "orders" && <OrdersScreen goBack={goBack} orders={data.orders} summary={data.summary} />}
           {screen === "notifications" && <NotificationsScreen goBack={goBack} notifications={data.notifications} onRead={data.markNotificationRead} />}
           {screen === "settings" && <SettingsScreen goBack={goBack} />}
+          {screen === "forms" && (
+            <FormsScreen
+              goBack={goBack}
+              navigate={navigate}
+              forms={data.forms}
+              onSelect={(form) => {
+                setSelectedForm({
+                  _id: form._id,
+                  name: form.name,
+                  slug: form.slug,
+                  fields: form.fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
+                  publishSettings: form.publishSettings,
+                });
+                navigate("form-editor");
+              }}
+            />
+          )}
           {screen === "form-templates" && <FormTemplatesScreen goBack={goBack} onCreateDraft={startBlankForm} />}
           {screen === "form-editor" && <FormEditorScreen goBack={goBack} form={currentForm} onSave={saveCurrentForm} onPublish={publishCurrentForm} />}
-          {screen === "form-published" && <FormPublishedScreen goBack={goBack} />}
+          {screen === "form-published" && <FormPublishedScreen goBack={goBack} shareUrl={currentFormShareUrl} />}
           {screen === "landing-templates" && <LandingTemplatesScreen goBack={goBack} onUseTemplate={useLandingTemplate} />}
           {screen === "product-create" && (
             <ProductCreateScreen

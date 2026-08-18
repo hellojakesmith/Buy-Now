@@ -8,6 +8,16 @@ export type AppContext = {
 const STORAGE_KEY = "buynow.context";
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
+export function buildApiUrl(path: string) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  if (API_BASE.startsWith("http://") || API_BASE.startsWith("https://")) {
+    return new URL(normalizedPath, API_BASE.endsWith("/") ? API_BASE : `${API_BASE}/`).toString();
+  }
+
+  return `${window.location.origin}${API_BASE}${normalizedPath}`;
+}
+
 export function loadStoredContext(): AppContext | null {
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (!raw) {
