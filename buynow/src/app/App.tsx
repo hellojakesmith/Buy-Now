@@ -22,6 +22,82 @@ type Screen =
 
 type Tab = "home" | "leads" | "pipeline" | "more";
 
+type LandingTemplateKey = "hero" | "consultation" | "creator-brand" | "local";
+
+type LandingThemeKey = "violet" | "midnight" | "sunset";
+
+type LandingTemplate = {
+  key: LandingTemplateKey;
+  name: string;
+  category: string;
+  headline: string;
+  description: string;
+  ctaLabel: string;
+  highlights: string[];
+  colors: [string, string];
+};
+
+type LandingDraft = {
+  templateKey: LandingTemplateKey;
+  pageName: string;
+  creatorName: string;
+  headline: string;
+  subheadline: string;
+  ctaLabel: string;
+  proofLine: string;
+  themeKey: LandingThemeKey;
+  formId: string | null;
+};
+
+const LANDING_THEMES: Array<{ key: LandingThemeKey; label: string; colors: [string, string]; surface: string; text: string }> = [
+  { key: "violet", label: "Violet", colors: ["#7448F6", "#0325D9"], surface: "#EEE9FF", text: "#0325D9" },
+  { key: "midnight", label: "Midnight", colors: ["#111827", "#374151"], surface: "#EEF0F5", text: "#111111" },
+  { key: "sunset", label: "Sunset", colors: ["#FF8A00", "#FF5C7A"], surface: "#FFF3E5", text: "#D97706" },
+];
+
+const LANDING_TEMPLATES: LandingTemplate[] = [
+  {
+    key: "hero",
+    name: "Modern Agency",
+    category: "Lead Generation",
+    headline: "Capture high-intent leads fast",
+    description: "A sharp, modern landing page for agencies and service businesses that need a clean conversion path.",
+    ctaLabel: "Book a Call",
+    highlights: ["Strong hero section", "Simple CTA", "Works great with forms"],
+    colors: ["#0325D9", "#7448F6"],
+  },
+  {
+    key: "consultation",
+    name: "Service Business",
+    category: "Consultation",
+    headline: "Turn visits into booked consultations",
+    description: "Built for mobile-first visitors who need a fast, trust-building page with one clear next step.",
+    ctaLabel: "Request Consultation",
+    highlights: ["Trust-first layout", "Fast to complete", "Lead form built in"],
+    colors: ["#16B879", "#0B36E5"],
+  },
+  {
+    key: "launch",
+    name: "Creator Brand",
+    category: "Personal Brand",
+    headline: "Launch an offer with confidence",
+    description: "A bold, polished template for creators, coaches, and personal brands selling a new offer.",
+    ctaLabel: "Join the List",
+    highlights: ["Big visual impact", "Email capture", "Great for launches"],
+    colors: ["#7448F6", "#FF8A00"],
+  },
+  {
+    key: "local",
+    name: "Local Business",
+    category: "Contact Page",
+    headline: "Make it easy to get in touch",
+    description: "A straightforward template for local businesses that want a beautiful contact page on mobile.",
+    ctaLabel: "Contact Us",
+    highlights: ["Fast and simple", "Mobile friendly", "Perfect for a contact form"],
+    colors: ["#FF8A00", "#0325D9"],
+  },
+];
+
 // ── Sample Data ────────────────────────────────────────────────────────────────
 const LEADS = [
   { id: 1, name: "Sarah Johnson", email: "sarah@email.com", phone: "(512) 555-1234", source: "Website Lead Form", status: "Qualified", time: "Today · 10:42 AM", interest: "Website Design", initials: "SJ" },
@@ -1218,42 +1294,151 @@ function FormPublishedScreen({ goBack, shareUrl }: { goBack: () => void; shareUr
 }
 
 // ── Landing Templates Screen ───────────────────────────────────────────────────
-function LandingTemplatesScreen({ goBack, onUseTemplate }: { goBack: () => void; onUseTemplate: (name: string, category: string) => Promise<void> }) {
-  const templates = [
-    { name: "Modern Agency", category: "Lead Generation", colors: ["#0325D9", "#7448F6"] },
-    { name: "Service Business", category: "Consultation", colors: ["#16B879", "#0B36E5"] },
-    { name: "Creator Brand", category: "Personal Brand", colors: ["#7448F6", "#FF8A00"] },
-    { name: "Simple SaaS", category: "Product Signup", colors: ["#0325D9", "#16B879"] },
-    { name: "Local Business", category: "Contact Page", colors: ["#FF8A00", "#0325D9"] },
-  ];
+function LandingTemplatesScreen({
+  goBack,
+  navigate,
+  forms,
+  onUseTemplate,
+}: {
+  goBack: () => void;
+  navigate: (s: Screen) => void;
+  forms: BackendForm[];
+  onUseTemplate: (templateKey: LandingTemplateKey, formId: string | null) => Promise<void>;
+}) {
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState<LandingTemplateKey>("hero");
+  const [selectedFormId, setSelectedFormId] = useState<string | null>(forms[0]?._id ?? null);
+
+  const selectedTemplate = LANDING_TEMPLATES.find((template) => template.key === selectedTemplateKey) ?? LANDING_TEMPLATES[0];
+  const selectedForm = forms.find((form) => form._id === selectedFormId) ?? forms[0] ?? null;
 
   return (
-    <div className="pb-8">
-      <ScreenHeader title="Landing Pages" onBack={goBack} />
-      <div className="px-4 pt-4 space-y-3">
-        <div className="text-[14px] text-[#6B7280] mb-1">Choose a template to get started quickly</div>
-        {templates.map(({ name, category, colors }) => (
-          <div key={name} className="rounded-[16px] border border-[#EEF0F5] overflow-hidden">
-            <div className="h-28 p-4 flex flex-col justify-between"
-              style={{ background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})` }}>
-              <div className="w-8 h-1.5 rounded-full bg-white/40" />
-              <div>
-                <div className="h-2 w-24 rounded-full bg-white/90 mb-2" />
-                <div className="h-1.5 w-32 rounded-full bg-white/60 mb-3" />
-                <div className="h-7 w-24 rounded-xl bg-white/90" />
+    <div className="pb-28">
+      <ScreenHeader
+        title="Landing Pages"
+        onBack={goBack}
+        right={
+          <button onClick={() => navigate("forms")} className="text-[12px] font-semibold text-[#0325D9]">
+            Forms
+          </button>
+        }
+      />
+
+      <div className="px-4 pt-4 space-y-4">
+        <div className="rounded-[24px] p-5 text-white shadow-[0_16px_32px_rgba(3,37,217,0.18)]"
+          style={{ background: `linear-gradient(135deg, ${selectedTemplate.colors[0]}, ${selectedTemplate.colors[1]})` }}>
+          <div className="text-[12px] font-semibold text-white/75 uppercase tracking-[0.18em]">Mobile-first builder</div>
+          <div className="text-[24px] font-black leading-tight mt-2">{selectedTemplate.headline}</div>
+          <div className="text-[13px] text-white/80 mt-2">{selectedTemplate.description}</div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {selectedTemplate.highlights.map((item) => (
+              <span key={item} className="rounded-full bg-white/16 px-3 py-1 text-[11px] font-semibold text-white">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[20px] border border-[#EEF0F5] bg-white p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[14px] font-bold text-[#111111]">Attach a form</div>
+              <div className="text-[12px] text-[#6B7280]">Use one of your existing forms on the page.</div>
+            </div>
+            <button onClick={() => navigate("forms")} className="text-[12px] font-semibold text-[#0325D9]">
+              Manage
+            </button>
+          </div>
+          {selectedForm ? (
+            <div className="rounded-[16px] border border-[#DCE5FF] bg-[#F7F8FF] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[13px] font-bold text-[#111111] truncate">{selectedForm.name}</div>
+                  <div className="text-[12px] text-[#6B7280] truncate">
+                    {selectedForm.fields?.length ?? 0} fields · {selectedForm.publishSettings?.path ?? "No share link yet"}
+                  </div>
+                </div>
+                <button onClick={() => setSelectedFormId(null)} className="text-[11px] font-semibold text-[#0325D9]">
+                  Clear
+                </button>
               </div>
             </div>
-            <div className="flex items-center justify-between p-3.5 bg-white">
-              <div>
-                <div className="font-bold text-[14px] text-[#111111]">{name}</div>
-                <div className="text-[12px] text-[#6B7280]">{category}</div>
-              </div>
-              <button onClick={() => void onUseTemplate(name, category)} className="px-3 py-1.5 rounded-xl text-[12px] font-semibold text-white bg-[#0325D9]">
-                Use Template
+          ) : (
+            <button
+              onClick={() => navigate("forms")}
+              className="w-full rounded-[16px] border-2 border-dashed border-[#0325D9] bg-[#F4F6FF] px-4 py-4 text-left"
+            >
+              <div className="text-[14px] font-bold text-[#0325D9]">Choose or create a form</div>
+              <div className="text-[12px] text-[#6B7280] mt-1">A form makes the landing page ready to collect leads immediately.</div>
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <div className="text-[14px] font-bold text-[#111111]">Pick a template</div>
+            <div className="text-[12px] text-[#6B7280]">Each one is optimized for mobile, with a clear action and clean layout.</div>
+          </div>
+          {LANDING_TEMPLATES.map((template) => {
+            const isActive = template.key === selectedTemplateKey;
+            return (
+              <button
+                key={template.key}
+                onClick={() => setSelectedTemplateKey(template.key)}
+                className="w-full rounded-[22px] border bg-white p-3 text-left transition-transform active:scale-[0.99]"
+                style={{ borderColor: isActive ? "#0325D9" : "#EEF0F5", boxShadow: isActive ? "0 12px 28px rgba(3,37,217,0.10)" : "none" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative h-24 w-[104px] flex-shrink-0 overflow-hidden rounded-[18px]"
+                    style={{ background: `linear-gradient(135deg, ${template.colors[0]}, ${template.colors[1]})` }}>
+                    <div className="absolute left-3 top-3 h-1.5 w-8 rounded-full bg-white/40" />
+                    <div className="absolute inset-x-3 top-8 h-2 rounded-full bg-white/82" />
+                    <div className="absolute inset-x-3 top-12 h-2 rounded-full bg-white/62" />
+                    <div className="absolute bottom-3 left-3 right-3 h-7 rounded-xl bg-white/92" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-[14px] font-black text-[#111111]">{template.name}</div>
+                        <div className="text-[12px] text-[#6B7280]">{template.category}</div>
+                      </div>
+                      {isActive && (
+                        <div className="rounded-full bg-[#E9EDFF] px-2.5 py-1 text-[11px] font-semibold text-[#0325D9]">
+                          Selected
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-2 text-[12px] text-[#6B7280] line-clamp-2">{template.description}</div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {template.highlights.slice(0, 2).map((item) => (
+                        <span key={item} className="rounded-full bg-[#F7F8FC] px-2.5 py-1 text-[10px] font-semibold text-[#6B7280]">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#EEF0F5] bg-white/96 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9CA3AF]">Create page</div>
+            <div className="truncate text-[13px] font-bold text-[#111111]">
+              {selectedTemplate.name}{selectedForm ? ` · ${selectedForm.name}` : " · no form attached"}
             </div>
           </div>
-        ))}
+          <button
+            onClick={() => void onUseTemplate(selectedTemplateKey, selectedForm?._id ?? null)}
+            className="rounded-[16px] bg-[#0325D9] px-4 py-3 text-[14px] font-semibold text-white shadow-[0_10px_24px_rgba(3,37,217,0.24)]"
+          >
+            Create
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1570,16 +1755,42 @@ export default function App() {
     navigate("form-published");
   };
 
-  const useLandingTemplate = async (name: string, category: string) => {
+  const useLandingTemplate = async (templateKey: LandingTemplateKey, formId: string | null) => {
+    const template = LANDING_TEMPLATES.find((item) => item.key === templateKey) ?? LANDING_TEMPLATES[0];
+    const selectedLandingForm = formId ? data.forms.find((form) => form._id === formId) ?? null : null;
+
     await data.createPage({
-      name,
-      slug: `${name}-landing`,
+      name: template.name,
       type: "landing",
       status: "draft",
-      seo: { title: name, description: category },
-      sections: [],
+      seo: {
+        title: template.name,
+        description: template.description,
+      },
+      sections: [
+        {
+          type: "hero",
+          template: template.key,
+          headline: template.headline,
+          description: template.description,
+          ctaLabel: template.ctaLabel,
+          colors: template.colors,
+        },
+        {
+          type: "form",
+          layout: "inline",
+          formId: selectedLandingForm?._id ?? null,
+          formName: selectedLandingForm?.name ?? null,
+          formSlug: selectedLandingForm?.slug ?? null,
+          ctaLabel: selectedLandingForm ? "Submit" : "Create a form",
+        },
+        {
+          type: "highlights",
+          items: template.highlights,
+        },
+      ],
     });
-    navigate("products");
+    navigate("more");
   };
 
   const saveProductDraft = async (draft: { name: string; price: number; description: string; inventory: number; status: string }) => {
@@ -1734,7 +1945,14 @@ export default function App() {
           {screen === "form-templates" && <FormTemplatesScreen goBack={goBack} onCreateDraft={startBlankForm} />}
           {screen === "form-editor" && <FormEditorScreen goBack={goBack} form={currentForm} onSave={saveCurrentForm} onPublish={publishCurrentForm} />}
           {screen === "form-published" && <FormPublishedScreen goBack={goBack} shareUrl={currentFormShareUrl} />}
-          {screen === "landing-templates" && <LandingTemplatesScreen goBack={goBack} onUseTemplate={useLandingTemplate} />}
+          {screen === "landing-templates" && (
+            <LandingTemplatesScreen
+              goBack={goBack}
+              navigate={navigate}
+              forms={data.forms}
+              onUseTemplate={useLandingTemplate}
+            />
+          )}
           {screen === "product-create" && (
             <ProductCreateScreen
               goBack={goBack}
