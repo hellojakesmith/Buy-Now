@@ -10,6 +10,7 @@ import {
 import {
   AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip
 } from "recharts";
+import { useAppData, type LeadUI, type OpportunityUI, type ProductUI, type OrderUI, type NotificationUI, type AnalyticsPoint } from "./lib/useAppData";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Screen =
@@ -187,18 +188,21 @@ function CreateSheet({ onClose, navigate }: { onClose: () => void; navigate: (s:
 }
 
 // ── Home Screen ────────────────────────────────────────────────────────────────
-function HomeScreen({ navigate, setShowCreate, leads, opportunities }: {
+function HomeScreen({ navigate, setShowCreate, leads, opportunities, workspaceName, userName, summary }: {
   navigate: (s: Screen) => void;
   setShowCreate: (v: boolean) => void;
-  leads: typeof LEADS;
-  opportunities: typeof OPPS;
+  leads: any[];
+  opportunities: any[];
+  workspaceName: string;
+  userName: string;
+  summary: { counts: { contacts: number; opportunities: number; orders: number; submissions: number; products: number; pages: number; notifications: number }; revenue: number };
 }) {
   return (
     <div className="px-4 pb-6 space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between pt-2">
         <div>
-          <div className="text-[22px] font-black text-[#111111]">Good morning, Jake 👋</div>
+          <div className="text-[22px] font-black text-[#111111]">Good morning, {userName.split(" ")[0] ?? "there"} 👋</div>
           <div className="text-[13px] text-[#6B7280]">{"Here's what's happening today."}</div>
         </div>
         <button
@@ -211,12 +215,12 @@ function HomeScreen({ navigate, setShowCreate, leads, opportunities }: {
       </div>
 
       {/* Hero metric card */}
-      <div
+        <div
         className="rounded-[20px] p-5 text-white"
         style={{ background: "linear-gradient(135deg, #0325D9 0%, #7448F6 100%)" }}
       >
         <div className="text-[13px] font-medium opacity-75 mb-1">Total Leads</div>
-        <div className="text-[44px] font-black leading-none mb-2">1,248</div>
+        <div className="text-[44px] font-black leading-none mb-2">{summary.counts.contacts.toLocaleString()}</div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 bg-white/20 rounded-full px-2 py-0.5">
             <TrendingUp size={11} color="white" />
@@ -227,12 +231,12 @@ function HomeScreen({ navigate, setShowCreate, leads, opportunities }: {
       </div>
 
       {/* Metrics grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {([
-          { label: "New Leads", value: "+42", Icon: Users, color: "#0325D9", bg: "#E9EDFF" },
-          { label: "Pipeline Value", value: "$24.5K", Icon: DollarSign, color: "#7448F6", bg: "#EEE9FF" },
-          { label: "Conversions", value: "8.4%", Icon: TrendingUp, color: "#16B879", bg: "#E8F8F1" },
-          { label: "Orders", value: "126", Icon: ShoppingBag, color: "#FF8A00", bg: "#FFF3E5" },
+        <div className="grid grid-cols-2 gap-3">
+          {([
+          { label: "New Leads", value: `+${summary.counts.contacts}`, Icon: Users, color: "#0325D9", bg: "#E9EDFF" },
+          { label: "Pipeline Value", value: `$${summary.revenue.toLocaleString()}`, Icon: DollarSign, color: "#7448F6", bg: "#EEE9FF" },
+          { label: "Conversions", value: `${Math.max(1, Math.round((summary.counts.submissions / Math.max(summary.counts.contacts, 1)) * 100))}%`, Icon: TrendingUp, color: "#16B879", bg: "#E8F8F1" },
+          { label: "Orders", value: `${summary.counts.orders}`, Icon: ShoppingBag, color: "#FF8A00", bg: "#FFF3E5" },
         ] as const).map(({ label, value, Icon, color, bg }) => (
           <div key={label} className="rounded-[16px] p-4 bg-white border border-[#EEF0F5]">
             <div className="flex items-center justify-between mb-3">
@@ -332,11 +336,12 @@ function HomeScreen({ navigate, setShowCreate, leads, opportunities }: {
 }
 
 // ── Leads Screen ───────────────────────────────────────────────────────────────
-function LeadsScreen({ leads, filterTab, setFilterTab, onSelect }: {
+function LeadsScreen({ leads, filterTab, setFilterTab, onSelect, onCreateLead }: {
   leads: typeof LEADS;
   filterTab: string;
   setFilterTab: (f: string) => void;
   onSelect: (l: (typeof LEADS)[0]) => void;
+  onCreateLead: () => Promise<void>;
 }) {
   const filters = ["All", "New", "Contacted", "Qualified", "Customer"];
   const filtered = filterTab === "All" ? leads : leads.filter((l) => l.status === filterTab);
@@ -350,7 +355,7 @@ function LeadsScreen({ leads, filterTab, setFilterTab, onSelect }: {
             <button className="w-9 h-9 flex items-center justify-center rounded-full border border-[#EEF0F5] bg-[#F7F8FC]">
               <Search size={16} color="#111111" />
             </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0325D9]">
+            <button onClick={() => void onCreateLead()} className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0325D9]">
               <Plus size={16} color="white" />
             </button>
           </div>
@@ -517,11 +522,12 @@ function LeadDetailScreen({ lead, goBack }: { lead: (typeof LEADS)[0]; goBack: (
 }
 
 // ── Pipeline Screen ────────────────────────────────────────────────────────────
-function PipelineScreen({ opportunities, stage, setStage, onSelect }: {
+function PipelineScreen({ opportunities, stage, setStage, onSelect, onCreateOpportunity }: {
   opportunities: typeof OPPS;
   stage: number;
   setStage: (n: number) => void;
   onSelect: (o: (typeof OPPS)[0]) => void;
+  onCreateOpportunity: () => Promise<void>;
 }) {
   const currentStage = STAGES[stage];
   const stageOpps = opportunities.filter((o) => o.stage === currentStage);
@@ -532,7 +538,7 @@ function PipelineScreen({ opportunities, stage, setStage, onSelect }: {
       <div className="px-4 pt-2 pb-4">
         <div className="flex items-center justify-between mb-1">
           <h1 className="text-[22px] font-black text-[#111111]">Pipeline</h1>
-          <button className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0325D9]">
+          <button onClick={() => void onCreateOpportunity()} className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0325D9]">
             <Plus size={16} color="white" />
           </button>
         </div>
@@ -586,7 +592,7 @@ function PipelineScreen({ opportunities, stage, setStage, onSelect }: {
             </div>
             <div className="font-bold text-[16px] text-[#111111] mb-1">No opportunities here</div>
             <div className="text-[13px] text-[#6B7280] mb-4">Add your first {currentStage.toLowerCase()} opportunity</div>
-            <button className="px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white bg-[#0325D9]">
+            <button onClick={() => void onCreateOpportunity()} className="px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white bg-[#0325D9]">
               Add Opportunity
             </button>
           </div>
@@ -679,13 +685,22 @@ function OppDetailScreen({ opp, goBack }: { opp: (typeof OPPS)[0]; goBack: () =>
 }
 
 // ── More Screen ────────────────────────────────────────────────────────────────
-function MoreScreen({ navigate }: { navigate: (s: Screen) => void }) {
+function MoreScreen({ navigate, summary, products, notifications, orders, workspaceName, userName, userEmail }: {
+  navigate: (s: Screen) => void;
+  summary: { counts: { contacts: number; opportunities: number; orders: number; submissions: number; products: number; pages: number; notifications: number }; revenue: number };
+  products: ProductUI[];
+  notifications: NotificationUI[];
+  orders: OrderUI[];
+  workspaceName: string;
+  userName: string;
+  userEmail: string;
+}) {
   const items = [
-    { Icon: BarChart2, label: "Analytics", desc: "Visitors, leads, revenue", screen: "analytics", color: "#0325D9", bg: "#E9EDFF" },
-    { Icon: ShoppingCart, label: "Orders", desc: "84 orders · $12,450 revenue", screen: "orders", color: "#16B879", bg: "#E8F8F1" },
-    { Icon: Layout, label: "Pages", desc: "3 published landing pages", screen: "landing-templates", color: "#7448F6", bg: "#EEE9FF" },
-    { Icon: Package, label: "Products", desc: "5 active products", screen: "products", color: "#FF8A00", bg: "#FFF3E5" },
-    { Icon: Bell, label: "Notifications", desc: "3 unread alerts", screen: "notifications", color: "#0325D9", bg: "#E9EDFF" },
+    { Icon: BarChart2, label: "Analytics", desc: `${summary.counts.contacts} contacts · ${summary.counts.submissions} submissions`, screen: "analytics", color: "#0325D9", bg: "#E9EDFF" },
+    { Icon: ShoppingCart, label: "Orders", desc: `${summary.counts.orders} orders · $${summary.revenue.toLocaleString()} revenue`, screen: "orders", color: "#16B879", bg: "#E8F8F1" },
+    { Icon: Layout, label: "Pages", desc: `${summary.counts.pages} published landing pages`, screen: "landing-templates", color: "#7448F6", bg: "#EEE9FF" },
+    { Icon: Package, label: "Products", desc: `${summary.counts.products} active products`, screen: "products", color: "#FF8A00", bg: "#FFF3E5" },
+    { Icon: Bell, label: "Notifications", desc: `${notifications.filter((item) => item.unread).length} unread alerts`, screen: "notifications", color: "#0325D9", bg: "#E9EDFF" },
     { Icon: Settings, label: "Settings", desc: "Account, billing, team", screen: "settings", color: "#6B7280", bg: "#F7F8FC" },
   ] as const;
 
@@ -693,13 +708,15 @@ function MoreScreen({ navigate }: { navigate: (s: Screen) => void }) {
     <div className="pb-4">
       <div className="px-4 pt-4 pb-5 border-b border-[#EEF0F5]">
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-[18px]"
-            style={{ background: "linear-gradient(135deg, #0325D9, #7448F6)" }}>
-            JK
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-[18px]"
+            style={{ background: "linear-gradient(135deg, #0325D9, #7448F6)" }}
+          >
+            {userName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1">
-            <div className="font-black text-[17px] text-[#111111]">Jake Keller</div>
-            <div className="text-[13px] text-[#6B7280]">jake@business.com</div>
+            <div className="font-black text-[17px] text-[#111111]">{workspaceName}</div>
+            <div className="text-[13px] text-[#6B7280]">{userEmail}</div>
             <span className="mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold inline-block bg-[#EEE9FF] text-[#7448F6]">
               Pro Plan
             </span>
@@ -730,8 +747,9 @@ function MoreScreen({ navigate }: { navigate: (s: Screen) => void }) {
 }
 
 // ── Analytics Screen ───────────────────────────────────────────────────────────
-function AnalyticsScreen({ data, goBack }: { data: typeof ANALYTICS; goBack: () => void }) {
+function AnalyticsScreen({ data, goBack, summary }: { data: AnalyticsPoint[]; summary: { counts: { contacts: number; opportunities: number; orders: number; submissions: number; products: number; pages: number; notifications: number }; revenue: number }; goBack: () => void }) {
   const [period, setPeriod] = useState("7 Days");
+  const leadConversion = Math.max(1, Math.round((summary.counts.submissions / Math.max(summary.counts.contacts, 1)) * 100));
   return (
     <div className="pb-8">
       <ScreenHeader title="Analytics" onBack={goBack} />
@@ -751,10 +769,10 @@ function AnalyticsScreen({ data, goBack }: { data: typeof ANALYTICS; goBack: () 
 
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Visitors", value: "12,840", change: "+18%" },
-            { label: "Leads", value: "1,248", change: "+12.5%" },
-            { label: "Conversion", value: "9.7%", change: "+2.1%" },
-            { label: "Revenue", value: "$24,560", change: "+24%" },
+            { label: "Visitors", value: `${data.reduce((sum, point) => sum + point.visitors, 0).toLocaleString()}`, change: "+live" },
+            { label: "Leads", value: `${summary.counts.contacts.toLocaleString()}`, change: "+live" },
+            { label: "Conversion", value: `${leadConversion}%`, change: "+live" },
+            { label: "Revenue", value: `$${summary.revenue.toLocaleString()}`, change: "+live" },
           ].map(({ label, value, change }) => (
             <div key={label} className="p-4 rounded-[16px] border border-[#EEF0F5] bg-white">
               <div className="text-[12px] text-[#6B7280] mb-1">{label}</div>
@@ -802,13 +820,7 @@ function AnalyticsScreen({ data, goBack }: { data: typeof ANALYTICS; goBack: () 
 }
 
 // ── Orders Screen ──────────────────────────────────────────────────────────────
-function OrdersScreen({ goBack }: { goBack: () => void }) {
-  const orders = [
-    { id: "#1048", product: "Premium Consultation", amount: 299, customer: "Sarah Johnson", status: "Paid", time: "Today" },
-    { id: "#1047", product: "Website Template", amount: 49, customer: "Mike Rodriguez", status: "Paid", time: "Today" },
-    { id: "#1046", product: "Marketing Bundle", amount: 199, customer: "Jessica Smith", status: "Pending", time: "Yesterday" },
-    { id: "#1045", product: "Premium Consultation", amount: 299, customer: "David Chen", status: "Paid", time: "2 days ago" },
-  ];
+function OrdersScreen({ goBack, orders, summary }: { goBack: () => void; orders: OrderUI[]; summary: { counts: { orders: number }; revenue: number } }) {
   const sColor: Record<string, string> = { Paid: "#16B879", Pending: "#FF8A00", Refunded: "#6B7280", Failed: "#EF4444" };
   const sBg: Record<string, string> = { Paid: "#E8F8F1", Pending: "#FFF3E5", Refunded: "#F7F8FC", Failed: "#FEECEC" };
 
@@ -818,10 +830,10 @@ function OrdersScreen({ goBack }: { goBack: () => void }) {
       <div className="px-4 pt-5 space-y-5">
         <div className="rounded-[20px] p-5 text-white" style={{ background: "linear-gradient(135deg, #0325D9, #7448F6)" }}>
           <div className="text-white/70 text-[12px] mb-1">Total Revenue</div>
-          <div className="text-white font-black text-[36px] leading-none mb-3">$12,450</div>
+          <div className="text-white font-black text-[36px] leading-none mb-3">${summary.revenue.toLocaleString()}</div>
           <div className="flex gap-6">
-            <div><div className="text-white/70 text-[11px]">Orders</div><div className="text-white font-bold text-[16px]">84</div></div>
-            <div><div className="text-white/70 text-[11px]">Avg. Order</div><div className="text-white font-bold text-[16px]">$148</div></div>
+            <div><div className="text-white/70 text-[11px]">Orders</div><div className="text-white font-bold text-[16px]">{summary.counts.orders}</div></div>
+            <div><div className="text-white/70 text-[11px]">Avg. Order</div><div className="text-white font-bold text-[16px]">${Math.round(summary.revenue / Math.max(summary.counts.orders, 1))}</div></div>
           </div>
         </div>
         <div className="space-y-2">
@@ -851,21 +863,21 @@ function OrdersScreen({ goBack }: { goBack: () => void }) {
 }
 
 // ── Notifications Screen ───────────────────────────────────────────────────────
-function NotificationsScreen({ goBack }: { goBack: () => void }) {
-  const notifs = [
-    { title: "New lead captured", body: "Sarah Johnson submitted Consultation Request.", time: "2 min ago", color: "#0325D9", bg: "#E9EDFF", Icon: Users },
-    { title: "Payment received", body: "$299 payment from Mike Rodriguez.", time: "15 min ago", color: "#16B879", bg: "#E8F8F1", Icon: DollarSign },
-    { title: "Pipeline update", body: "Sarah Johnson moved to Proposal.", time: "1 hour ago", color: "#7448F6", bg: "#EEE9FF", Icon: GitBranch },
-    { title: "New lead captured", body: "David Chen submitted Lead Form.", time: "2 hours ago", color: "#0325D9", bg: "#E9EDFF", Icon: Users },
-  ];
+function NotificationsScreen({ goBack, notifications, onRead }: { goBack: () => void; notifications: NotificationUI[]; onRead: (id: string) => void }) {
 
   return (
     <div className="pb-8">
       <ScreenHeader title="Notifications" onBack={goBack} />
       <div className="px-4 pt-4 space-y-2">
-        {notifs.map(({ title, body, time, color, bg, Icon }, i) => (
-          <div key={i} className="flex gap-3 p-4 rounded-[16px] border"
-            style={{ background: i < 2 ? "#FAFBFF" : "#FFFFFF", borderColor: i < 2 ? "#D4DEFF" : "#EEF0F5" }}>
+        {notifications.map(({ id, title, body, time, color, bg, icon, unread }, i) => {
+          const Icon = icon === "payment" ? DollarSign : icon === "pipeline" ? GitBranch : Users;
+          return (
+          <button
+            key={id}
+            onClick={() => unread && onRead(id)}
+            className="flex w-full gap-3 rounded-[16px] border p-4 text-left"
+            style={{ background: unread ? "#FAFBFF" : "#FFFFFF", borderColor: unread ? "#D4DEFF" : "#EEF0F5" }}
+          >
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg }}>
               <Icon size={18} color={color} />
             </div>
@@ -874,9 +886,9 @@ function NotificationsScreen({ goBack }: { goBack: () => void }) {
               <div className="text-[12px] text-[#6B7280] mt-0.5">{body}</div>
               <div className="text-[11px] text-[#9CA3AF] mt-1">{time}</div>
             </div>
-            {i < 2 && <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-[#0325D9]" />}
-          </div>
-        ))}
+            {unread && <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-[#0325D9]" />}
+          </button>
+        )})}
       </div>
     </div>
   );
@@ -915,7 +927,7 @@ function SettingsScreen({ goBack }: { goBack: () => void }) {
 }
 
 // ── Form Templates Screen ──────────────────────────────────────────────────────
-function FormTemplatesScreen({ goBack, navigate }: { goBack: () => void; navigate: (s: Screen) => void }) {
+function FormTemplatesScreen({ goBack, onCreateDraft }: { goBack: () => void; onCreateDraft: (template?: string) => Promise<void> }) {
   const templates = [
     { name: "Consultation Request", category: "Consultation", fields: ["Name", "Email", "Phone", "What can we help with?", "Preferred date"] },
     { name: "Lead Generation", category: "Lead Generation", fields: ["First Name", "Last Name", "Email", "Company"] },
@@ -930,7 +942,7 @@ function FormTemplatesScreen({ goBack, navigate }: { goBack: () => void; navigat
         <div className="text-[14px] text-[#6B7280]">Start with a template or build from scratch</div>
 
         <button
-          onClick={() => navigate("form-editor")}
+          onClick={() => void onCreateDraft()}
           className="w-full p-4 rounded-[16px] border-2 border-dashed border-[#0325D9] flex items-center gap-3 text-left"
         >
           <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#E9EDFF]">
@@ -943,7 +955,7 @@ function FormTemplatesScreen({ goBack, navigate }: { goBack: () => void; navigat
           {templates.map(({ name, category, fields }) => (
             <button
               key={name}
-              onClick={() => navigate("form-editor")}
+              onClick={() => void onCreateDraft(name)}
               className="w-full p-4 rounded-[16px] border border-[#EEF0F5] bg-white text-left"
             >
               <div className="flex items-start justify-between mb-3">
@@ -972,8 +984,22 @@ function FormTemplatesScreen({ goBack, navigate }: { goBack: () => void; navigat
 }
 
 // ── Form Editor Screen ─────────────────────────────────────────────────────────
-function FormEditorScreen({ goBack, navigate }: { goBack: () => void; navigate: (s: Screen) => void }) {
-  const fields = [
+function FormEditorScreen({
+  goBack,
+  onSave,
+  onPublish,
+  form,
+}: {
+  goBack: () => void;
+  onSave: () => Promise<void>;
+  onPublish: () => Promise<void>;
+  form: { name: string; slug: string; status?: string; fields?: Array<{ label: string; type: string; required?: boolean }> } | null;
+}) {
+  const fields = form?.fields?.map((field) => ({
+    label: field.label,
+    type: field.type,
+    required: Boolean(field.required),
+  })) ?? [
     { label: "First Name", type: "Short Text", required: true },
     { label: "Last Name", type: "Short Text", required: true },
     { label: "Email", type: "Email", required: true },
@@ -987,10 +1013,10 @@ function FormEditorScreen({ goBack, navigate }: { goBack: () => void; navigate: 
         <button onClick={goBack} className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F7F8FC]">
           <ChevronLeft size={18} color="#111111" />
         </button>
-        <span className="font-bold text-[16px] text-[#111111]">New Lead Form</span>
+        <span className="font-bold text-[16px] text-[#111111]">{form?.name ?? "New Lead Form"}</span>
         <div className="flex gap-2">
-          <button className="px-3 py-1.5 rounded-xl text-[13px] font-semibold bg-[#F7F8FC] text-[#111111]">Save</button>
-          <button onClick={() => navigate("form-published")} className="px-3 py-1.5 rounded-xl text-[13px] font-semibold text-white bg-[#0325D9]">
+          <button onClick={() => void onSave()} className="px-3 py-1.5 rounded-xl text-[13px] font-semibold bg-[#F7F8FC] text-[#111111]">Save</button>
+          <button onClick={() => void onPublish()} className="px-3 py-1.5 rounded-xl text-[13px] font-semibold text-white bg-[#0325D9]">
             Publish
           </button>
         </div>
@@ -1097,7 +1123,7 @@ function FormPublishedScreen({ goBack }: { goBack: () => void }) {
 }
 
 // ── Landing Templates Screen ───────────────────────────────────────────────────
-function LandingTemplatesScreen({ goBack }: { goBack: () => void }) {
+function LandingTemplatesScreen({ goBack, onUseTemplate }: { goBack: () => void; onUseTemplate: (name: string, category: string) => Promise<void> }) {
   const templates = [
     { name: "Modern Agency", category: "Lead Generation", colors: ["#0325D9", "#7448F6"] },
     { name: "Service Business", category: "Consultation", colors: ["#16B879", "#0B36E5"] },
@@ -1127,7 +1153,7 @@ function LandingTemplatesScreen({ goBack }: { goBack: () => void }) {
                 <div className="font-bold text-[14px] text-[#111111]">{name}</div>
                 <div className="text-[12px] text-[#6B7280]">{category}</div>
               </div>
-              <button className="px-3 py-1.5 rounded-xl text-[12px] font-semibold text-white bg-[#0325D9]">
+              <button onClick={() => void onUseTemplate(name, category)} className="px-3 py-1.5 rounded-xl text-[12px] font-semibold text-white bg-[#0325D9]">
                 Use Template
               </button>
             </div>
@@ -1139,12 +1165,25 @@ function LandingTemplatesScreen({ goBack }: { goBack: () => void }) {
 }
 
 // ── Product Create Screen ──────────────────────────────────────────────────────
-function ProductCreateScreen({ goBack, navigate }: { goBack: () => void; navigate: (s: Screen) => void }) {
+function ProductCreateScreen({
+  goBack,
+  onSaveProduct,
+  onCreatePage,
+}: {
+  goBack: () => void;
+  onSaveProduct: (product: { name: string; price: number; description: string; inventory: number; status: string }) => Promise<void>;
+  onCreatePage: () => Promise<void>;
+}) {
+  const [name, setName] = useState("Premium Consultation");
+  const [price, setPrice] = useState("299");
+  const [description, setDescription] = useState("Get a personalized consultation designed to help you grow your business.");
+  const [inventory, setInventory] = useState("0");
+
   return (
     <div className="pb-8">
       <ScreenHeader title="Create Product" onBack={goBack} />
       <div className="px-4 pt-5 space-y-4">
-        <button className="w-full h-36 rounded-[16px] border-2 border-dashed border-[#0325D9] bg-[#F4F6FF] flex flex-col items-center justify-center gap-2">
+        <button onClick={() => void onCreatePage()} className="w-full h-36 rounded-[16px] border-2 border-dashed border-[#0325D9] bg-[#F4F6FF] flex flex-col items-center justify-center gap-2">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#E9EDFF]">
             <Upload size={20} color="#0325D9" />
           </div>
@@ -1152,42 +1191,52 @@ function ProductCreateScreen({ goBack, navigate }: { goBack: () => void; navigat
         </button>
 
         {[
-          { label: "Product Name", placeholder: "Enter product name" },
-          { label: "Price", placeholder: "$49.00" },
-        ].map(({ label, placeholder }) => (
+          { label: "Product Name", value: name, setter: setName, placeholder: "Enter product name" },
+          { label: "Price", value: price, setter: setPrice, placeholder: "$49.00" },
+        ].map(({ label, value, setter, placeholder }) => (
           <div key={label}>
             <div className="text-[13px] font-semibold text-[#333333] mb-1.5">{label}</div>
-            <div className="h-[52px] px-4 rounded-xl flex items-center text-[14px] text-[#9CA3AF] bg-[#F7F8FC] border border-[#E5E7EB]">
-              {placeholder}
-            </div>
+            <input
+              value={value}
+              onChange={(event) => setter(event.target.value)}
+              placeholder={placeholder}
+              className="h-[52px] w-full rounded-xl border border-[#E5E7EB] bg-[#F7F8FC] px-4 text-[14px] text-[#111111] outline-none"
+            />
           </div>
         ))}
 
         <div>
           <div className="text-[13px] font-semibold text-[#333333] mb-1.5">Description</div>
-          <div className="h-24 px-4 py-3 rounded-xl text-[14px] text-[#9CA3AF] bg-[#F7F8FC] border border-[#E5E7EB]">
-            Describe your product...
-          </div>
+          <textarea
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            className="h-24 w-full rounded-xl border border-[#E5E7EB] bg-[#F7F8FC] px-4 py-3 text-[14px] text-[#111111] outline-none"
+            placeholder="Describe your product..."
+          />
         </div>
 
         <div className="p-4 rounded-[16px] bg-[#F7F8FC] border border-[#EEF0F5]">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-2">Optional</div>
-          {["SKU", "Inventory", "Product Category"].map((f) => (
-            <div key={f} className="flex items-center justify-between py-2.5 border-b border-[#EEF0F5] last:border-0">
-              <span className="text-[13px] text-[#6B7280]">{f}</span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between py-2.5 border-b border-[#EEF0F5]">
+              <span className="text-[13px] text-[#6B7280]">Inventory</span>
+              <input value={inventory} onChange={(event) => setInventory(event.target.value)} className="w-24 rounded-lg border border-[#E5E7EB] bg-white px-3 py-1 text-right text-[13px] text-[#111111] outline-none" />
+            </div>
+            <div className="flex items-center justify-between py-2.5 border-b border-[#EEF0F5]">
+              <span className="text-[13px] text-[#6B7280]">Product Category</span>
               <ChevronRight size={14} color="#9CA3AF" />
             </div>
-          ))}
+          </div>
         </div>
 
         <button
-          onClick={() => navigate("checkout-preview")}
+          onClick={() => void onSaveProduct({ name, price: Number(price) || 0, description, inventory: Number(inventory) || 0, status: "active" })}
           className="w-full font-bold text-[16px] text-white rounded-xl"
           style={{ height: 52, background: "linear-gradient(135deg, #0325D9, #7448F6)", boxShadow: "0 8px 24px rgba(3,37,217,0.25)" }}
         >
           Create Buy Now Page
         </button>
-        <button className="w-full font-bold text-[15px] text-[#111111] rounded-xl bg-[#F7F8FC]" style={{ height: 48 }}>
+        <button onClick={() => void onSaveProduct({ name, price: Number(price) || 0, description, inventory: Number(inventory) || 0, status: "draft" })} className="w-full font-bold text-[15px] text-[#111111] rounded-xl bg-[#F7F8FC]" style={{ height: 48 }}>
           Save Product
         </button>
       </div>
@@ -1196,7 +1245,7 @@ function ProductCreateScreen({ goBack, navigate }: { goBack: () => void; navigat
 }
 
 // ── Checkout Preview Screen ────────────────────────────────────────────────────
-function CheckoutPreviewScreen({ goBack }: { goBack: () => void }) {
+function CheckoutPreviewScreen({ goBack, product }: { goBack: () => void; product: { name: string; price: number; description?: string } | null }) {
   return (
     <div className="pb-8">
       <ScreenHeader title="Checkout Preview" onBack={goBack} />
@@ -1207,10 +1256,10 @@ function CheckoutPreviewScreen({ goBack }: { goBack: () => void }) {
         </div>
         <div className="px-4 pt-4 space-y-5">
           <div>
-            <div className="text-[22px] font-black text-[#111111]">Premium Consultation</div>
-            <div className="text-[28px] font-black text-[#0325D9] mt-1">$299</div>
+            <div className="text-[22px] font-black text-[#111111]">{product?.name ?? "Premium Consultation"}</div>
+            <div className="text-[28px] font-black text-[#0325D9] mt-1">${(product?.price ?? 299).toLocaleString()}</div>
             <div className="text-[14px] text-[#6B7280] mt-2">
-              Get a personalized consultation designed to help you grow your business.
+              {product?.description ?? "Get a personalized consultation designed to help you grow your business."}
             </div>
           </div>
 
@@ -1261,13 +1310,7 @@ function CheckoutPreviewScreen({ goBack }: { goBack: () => void }) {
 }
 
 // ── Products Screen ────────────────────────────────────────────────────────────
-function ProductsScreen({ goBack, navigate }: { goBack: () => void; navigate: (s: Screen) => void }) {
-  const products = [
-    { name: "Premium Consultation", price: 299, sales: 127, status: "Active" },
-    { name: "Website Template", price: 49, sales: 84, status: "Active" },
-    { name: "Marketing Bundle", price: 199, sales: 31, status: "Active" },
-    { name: "Brand Strategy Kit", price: 149, sales: 12, status: "Draft" },
-  ];
+function ProductsScreen({ goBack, navigate, products }: { goBack: () => void; navigate: (s: Screen) => void; products: ProductUI[] }) {
 
   return (
     <div className="pb-8">
@@ -1281,8 +1324,8 @@ function ProductsScreen({ goBack, navigate }: { goBack: () => void; navigate: (s
         </button>
       </div>
       <div className="px-4 pt-4 space-y-3">
-        {products.map(({ name, price, sales, status }) => (
-          <div key={name} className="p-4 rounded-[16px] border border-[#EEF0F5] bg-white">
+        {products.map(({ id, name, price, sales, status, description }) => (
+          <div key={id} className="p-4 rounded-[16px] border border-[#EEF0F5] bg-white">
             <div className="flex items-start gap-3">
               <div className="w-14 h-14 rounded-[12px] flex items-center justify-center flex-shrink-0"
                 style={{ background: "linear-gradient(135deg, #E9EDFF, #EEE9FF)" }}>
@@ -1291,6 +1334,7 @@ function ProductsScreen({ goBack, navigate }: { goBack: () => void; navigate: (s
               <div className="flex-1">
                 <div className="font-bold text-[14px] text-[#111111]">{name}</div>
                 <div className="text-[22px] font-black text-[#0325D9]">${price}</div>
+                {description && <div className="text-[12px] text-[#6B7280] mt-1 line-clamp-2">{description}</div>}
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-[12px] text-[#6B7280]">{sales} Sales</span>
                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
@@ -1314,11 +1358,14 @@ function ProductsScreen({ goBack, navigate }: { goBack: () => void; navigate: (s
 
 // ── Root App ───────────────────────────────────────────────────────────────────
 export default function App() {
+  const data = useAppData();
   const [screen, setScreen] = useState<Screen>("home");
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedLead, setSelectedLead] = useState(LEADS[0]);
-  const [selectedOpp, setSelectedOpp] = useState(OPPS[0]);
+  const [selectedLead, setSelectedLead] = useState<LeadUI | null>(null);
+  const [selectedOpp, setSelectedOpp] = useState<OpportunityUI | null>(null);
+  const [selectedForm, setSelectedForm] = useState<{ _id: string; name: string; slug: string; fields?: Array<{ label: string; type: string; required?: boolean }> } | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<{ name: string; price: number; description?: string } | null>(null);
   const [pipelineStage, setPipelineStage] = useState(0);
   const [filterTab, setFilterTab] = useState("All");
 
@@ -1344,6 +1391,165 @@ export default function App() {
   const tabNav = (tab: Tab) => { setActiveTab(tab); setScreen(tab as Screen); };
 
   const showNav = !DETAIL_SCREENS.includes(screen);
+  const currentLead = selectedLead ?? data.leads[0];
+  const currentOpp = selectedOpp ?? data.opportunities[0];
+  const currentForm = selectedForm ?? (data.forms[0] ? {
+    _id: data.forms[0]._id,
+    name: data.forms[0].name,
+    slug: data.forms[0].slug,
+    fields: data.forms[0].fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
+  } : null);
+
+  const startBlankForm = async (templateName?: string) => {
+    const templateMap: Record<string, { description: string; fields: Array<{ key: string; label: string; type: string; required: boolean; order: number }> }> = {
+      "Consultation Request": {
+        description: "Capture consultation requests and project scope.",
+        fields: [
+          { key: "name", label: "Name", type: "Short Text", required: true, order: 0 },
+          { key: "email", label: "Email", type: "Email", required: true, order: 1 },
+          { key: "phone", label: "Phone", type: "Phone", required: false, order: 2 },
+        ],
+      },
+      "Lead Generation": {
+        description: "Capture lead details quickly.",
+        fields: [
+          { key: "firstName", label: "First Name", type: "Short Text", required: true, order: 0 },
+          { key: "lastName", label: "Last Name", type: "Short Text", required: true, order: 1 },
+          { key: "email", label: "Email", type: "Email", required: true, order: 2 },
+        ],
+      },
+    };
+
+    const selectedTemplate = templateName ? templateMap[templateName] : null;
+    const form = await data.createForm({
+      name: templateName ?? "New Lead Form",
+      slug: templateName ?? "new-lead-form",
+      description: selectedTemplate?.description ?? "Tell us a little about yourself.",
+      fields: selectedTemplate?.fields ?? [
+        { key: "name", label: "Name", type: "Short Text", required: true, order: 0 },
+        { key: "email", label: "Email", type: "Email", required: true, order: 1 },
+        { key: "interest", label: "What are you interested in?", type: "Multiple Choice", required: false, order: 2 },
+      ],
+      submitAction: { createContact: true, createOpportunity: false, pipelineStage: "new" },
+      publishSettings: { path: "/f/new-lead-form", qrCodeEnabled: true, embedEnabled: true },
+      status: "draft",
+    });
+    setSelectedForm({
+      _id: form._id,
+      name: form.name,
+      slug: form.slug,
+      fields: form.fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
+    });
+    navigate("form-editor");
+  };
+
+  const saveCurrentForm = async () => {
+    if (!currentForm) {
+      return;
+    }
+    await data.updateForm(currentForm._id, {
+      name: currentForm.name,
+      slug: currentForm.slug,
+      fields: currentForm.fields ?? [],
+    });
+  };
+
+  const publishCurrentForm = async () => {
+    if (!currentForm) {
+      return;
+    }
+    await data.publishForm(currentForm._id, { publishSettings: { path: `/f/${currentForm.slug}` } });
+    navigate("form-published");
+  };
+
+  const useLandingTemplate = async (name: string, category: string) => {
+    await data.createPage({
+      name,
+      slug: `${name}-landing`,
+      type: "landing",
+      status: "draft",
+      seo: { title: name, description: category },
+      sections: [],
+    });
+    navigate("products");
+  };
+
+  const saveProductDraft = async (draft: { name: string; price: number; description: string; inventory: number; status: string }) => {
+    const product = await data.createProduct({
+      name: draft.name,
+      slug: draft.name,
+      description: draft.description,
+      price: draft.price,
+      status: draft.status === "active" ? "active" : "draft",
+      inventory: draft.inventory,
+      checkoutSettings: { allowQuantity: true },
+    });
+    await data.createPage({
+      name: `${product.name} Checkout`,
+      slug: `${product.slug}-checkout`,
+      type: "buy-now",
+      status: "draft",
+      sections: [
+        {
+          type: "product-checkout",
+          productId: product._id,
+        },
+      ],
+    });
+    setSelectedProduct({
+      name: product.name,
+      price: product.price,
+      description: product.description,
+    });
+    navigate("checkout-preview");
+  };
+
+  const createFromLeadPrompt = async () => {
+    const name = window.prompt("Lead name");
+    if (!name) return;
+    const email = window.prompt("Lead email") ?? undefined;
+    const phone = window.prompt("Lead phone") ?? undefined;
+    const interest = window.prompt("Interest", "General inquiry") ?? undefined;
+    await data.createLead({ name, email, phone, interest, source: "manual" });
+  };
+
+  const createOpportunityPrompt = async () => {
+    const name = window.prompt("Contact name");
+    if (!name) return;
+    const contactEmail = window.prompt("Contact email") ?? undefined;
+    const contact = await data.createLead({ name, email: contactEmail, source: "manual", interest: "New opportunity" });
+    const title = window.prompt("Opportunity title", "New Opportunity") ?? "New Opportunity";
+    const value = Number(window.prompt("Opportunity value", "0") ?? "0");
+    await data.createOpportunity({ contactId: contact.rawId, title, value, stageKey: "new", source: "manual" });
+  };
+
+  if (data.loading) {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-white text-[#111111]">
+        <div className="text-center">
+          <div className="text-[18px] font-bold">Loading workspace</div>
+          <div className="text-[13px] text-[#6B7280] mt-1">Connecting the frontend to the backend.</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (data.error) {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-white px-6 text-center">
+        <div>
+          <div className="text-[18px] font-bold text-[#111111]">Unable to load app data</div>
+          <div className="text-[13px] text-[#6B7280] mt-2">{data.error}</div>
+          <button
+            onClick={() => void data.refresh()}
+            className="mt-4 rounded-xl bg-[#0325D9] px-4 py-2 text-[14px] font-semibold text-white"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -1351,47 +1557,72 @@ export default function App() {
       style={{ background: "linear-gradient(135deg, #eef1ff 0%, #f3eeff 50%, #eef5ff 100%)", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}
     >
       <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
-        {/* Content */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pb-28" style={{ scrollbarWidth: "none" }}>
           {screen === "home" && (
-            <HomeScreen navigate={navigate} setShowCreate={setShowCreate} leads={LEADS} opportunities={OPPS} />
+            <HomeScreen
+              navigate={navigate}
+              setShowCreate={setShowCreate}
+              leads={data.leads as any}
+              opportunities={data.opportunities as any}
+              workspaceName={data.workspaceName}
+              userName={data.userName}
+              summary={data.summary}
+            />
           )}
           {screen === "leads" && (
             <LeadsScreen
-              leads={LEADS}
+              leads={data.leads as any}
               filterTab={filterTab}
               setFilterTab={setFilterTab}
-              onSelect={(lead) => { setSelectedLead(lead); navigate("lead-detail"); }}
+              onSelect={(lead) => { setSelectedLead(lead as LeadUI); navigate("lead-detail"); }}
+              onCreateLead={createFromLeadPrompt}
             />
           )}
-          {screen === "lead-detail" && <LeadDetailScreen lead={selectedLead} goBack={goBack} />}
+          {screen === "lead-detail" && currentLead && <LeadDetailScreen lead={currentLead as any} goBack={goBack} />}
           {screen === "pipeline" && (
             <PipelineScreen
-              opportunities={OPPS}
+              opportunities={data.opportunities as any}
               stage={pipelineStage}
               setStage={setPipelineStage}
-              onSelect={(opp) => { setSelectedOpp(opp); navigate("opp-detail"); }}
+              onSelect={(opp) => { setSelectedOpp(opp as OpportunityUI); navigate("opp-detail"); }}
+              onCreateOpportunity={createOpportunityPrompt}
             />
           )}
-          {screen === "opp-detail" && <OppDetailScreen opp={selectedOpp} goBack={goBack} />}
-          {screen === "more" && <MoreScreen navigate={navigate} />}
-          {screen === "analytics" && <AnalyticsScreen data={ANALYTICS} goBack={goBack} />}
-          {screen === "orders" && <OrdersScreen goBack={goBack} />}
-          {screen === "notifications" && <NotificationsScreen goBack={goBack} />}
+          {screen === "opp-detail" && currentOpp && <OppDetailScreen opp={currentOpp as any} goBack={goBack} />}
+          {screen === "more" && (
+            <MoreScreen
+              navigate={navigate}
+              summary={data.summary}
+              products={data.products}
+              notifications={data.notifications}
+              orders={data.orders}
+              workspaceName={data.workspaceName}
+              userName={data.userName}
+              userEmail={data.userEmail}
+            />
+          )}
+          {screen === "analytics" && <AnalyticsScreen data={data.analytics as any} summary={data.summary} goBack={goBack} />}
+          {screen === "orders" && <OrdersScreen goBack={goBack} orders={data.orders} summary={data.summary} />}
+          {screen === "notifications" && <NotificationsScreen goBack={goBack} notifications={data.notifications} onRead={data.markNotificationRead} />}
           {screen === "settings" && <SettingsScreen goBack={goBack} />}
-          {screen === "form-templates" && <FormTemplatesScreen goBack={goBack} navigate={navigate} />}
-          {screen === "form-editor" && <FormEditorScreen goBack={goBack} navigate={navigate} />}
+          {screen === "form-templates" && <FormTemplatesScreen goBack={goBack} onCreateDraft={startBlankForm} />}
+          {screen === "form-editor" && <FormEditorScreen goBack={goBack} form={currentForm} onSave={saveCurrentForm} onPublish={publishCurrentForm} />}
           {screen === "form-published" && <FormPublishedScreen goBack={goBack} />}
-          {screen === "landing-templates" && <LandingTemplatesScreen goBack={goBack} />}
-          {screen === "product-create" && <ProductCreateScreen goBack={goBack} navigate={navigate} />}
-          {screen === "checkout-preview" && <CheckoutPreviewScreen goBack={goBack} />}
-          {screen === "products" && <ProductsScreen goBack={goBack} navigate={navigate} />}
+          {screen === "landing-templates" && <LandingTemplatesScreen goBack={goBack} onUseTemplate={useLandingTemplate} />}
+          {screen === "product-create" && (
+            <ProductCreateScreen
+              goBack={goBack}
+              onSaveProduct={saveProductDraft}
+              onCreatePage={async () => {
+                await data.createPage({ name: "Buy Now Page", type: "buy-now", status: "draft", sections: [] });
+              }}
+            />
+          )}
+          {screen === "checkout-preview" && <CheckoutPreviewScreen goBack={goBack} product={selectedProduct} />}
+          {screen === "products" && <ProductsScreen goBack={goBack} navigate={navigate} products={data.products} />}
         </div>
 
-        {/* Bottom nav */}
         {showNav && <BottomNav active={activeTab} onTab={tabNav} onCreate={() => setShowCreate(true)} />}
-
-        {/* Create sheet */}
         {showCreate && <CreateSheet onClose={() => setShowCreate(false)} navigate={navigate} />}
       </div>
     </div>

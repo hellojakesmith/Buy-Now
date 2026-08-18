@@ -1,0 +1,36 @@
+import { Router } from "express";
+import { healthRouter } from "./health.js";
+import { mediaRouter } from "./media.js";
+import { authRouter } from "./auth.js";
+import { workspaceRouter } from "./workspaces.js";
+import { contactsRouter } from "./contacts.js";
+import { formsRouter } from "./forms.js";
+import { pipelinesRouter } from "./pipelines.js";
+import { opportunitiesRouter } from "./opportunities.js";
+import { productsRouter } from "./products.js";
+import { pagesRouter } from "./pages.js";
+import { ordersRouter } from "./orders.js";
+import { notificationsRouter } from "./notifications.js";
+import { activityRouter } from "./activity.js";
+import { dashboardRouter } from "./dashboard.js";
+import { publicRouter } from "./public.js";
+import { usersRouter } from "./users.js";
+
+export const apiRouter = Router();
+
+apiRouter.use("/health", healthRouter);
+apiRouter.use("/auth", authRouter);
+apiRouter.use("/workspace", workspaceRouter);
+apiRouter.use("/users", usersRouter);
+apiRouter.use("/contacts", contactsRouter);
+apiRouter.use("/forms", formsRouter);
+apiRouter.use("/pipelines", pipelinesRouter);
+apiRouter.use("/opportunities", opportunitiesRouter);
+apiRouter.use("/products", productsRouter);
+apiRouter.use("/pages", pagesRouter);
+apiRouter.use("/orders", ordersRouter);
+apiRouter.use("/notifications", notificationsRouter);
+apiRouter.use("/activity", activityRouter);
+apiRouter.use("/dashboard", dashboardRouter);
+apiRouter.use("/public", publicRouter);
+apiRouter.use("/media", mediaRouter);

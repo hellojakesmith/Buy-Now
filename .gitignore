@@ -1,0 +1,19 @@
+.DS_Store
+.env
+.env.local
+.env.*.local
+
+# Keep example env files tracked
+!.env.example
+!*.env.example
+
+# Backend
+/backend/.env
+/backend/node_modules/
+/backend/dist/
+/backend/*.log
+
+# Frontend
+/buynow/node_modules/
+/buynow/dist/
+/buynow/*.log
