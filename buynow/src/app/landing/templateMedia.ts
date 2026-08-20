@@ -6,7 +6,7 @@ export type TemplateMediaAsset = {
   credit: string;
 };
 
-/** Curated demo imagery. Replaceable by the user's Media Library at any time. */
+/** Curated demo imagery used as starter content. Stable IDs allow future media-library replacement. */
 export const TEMPLATE_MEDIA: Record<string, TemplateMediaAsset[]> = {
   creator: [
     { id: 'creator-hero', kind: 'hero', url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1600&q=85', alt: 'Creator portrait in natural light', credit: 'Unsplash' },
@@ -43,3 +43,4 @@ export const TEMPLATE_MEDIA: Record<string, TemplateMediaAsset[]> = {
 };
 
 export const getTemplateMedia = (templateId: string) => TEMPLATE_MEDIA[templateId] ?? TEMPLATE_MEDIA.creator;
+export const getTemplateAsset = (templateId: string, assetId: string) => getTemplateMedia(templateId).find((asset) => asset.id === assetId);
