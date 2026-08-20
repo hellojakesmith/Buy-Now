@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import App from "./App";
+import LandingPageBuilderHost from "./landing/LandingPageBuilderHost";
 import { authRequest, contextFromAuth, getCurrentAuth, logout, saveStoredContext, type AuthResponse } from "./lib/api";
 import PublicForm, { publicFormSlugFromPath } from "./forms/PublicForm";
 
@@ -106,12 +107,15 @@ export default function AuthGate() {
 
   if (auth) {
     return (
-      <App
-        onLogout={async () => {
-          await logout();
-          setAuth(null);
-        }}
-      />
+      <>
+        <App
+          onLogout={async () => {
+            await logout();
+            setAuth(null);
+          }}
+        />
+        <LandingPageBuilderHost />
+      </>
     );
   }
 
