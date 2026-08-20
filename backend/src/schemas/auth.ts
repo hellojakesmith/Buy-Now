@@ -27,6 +27,15 @@ export const bootstrapAuthSchema = z.object({
   path: ["email"],
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email().max(254),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(20).max(200),
+  password: passwordSchema,
+});
+
 export type RegisterAuthInput = z.infer<typeof registerAuthSchema>;
 export type LoginAuthInput = z.infer<typeof loginAuthSchema>;
 export type BootstrapAuthInput = z.infer<typeof bootstrapAuthSchema>;

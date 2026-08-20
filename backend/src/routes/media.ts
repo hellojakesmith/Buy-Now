@@ -58,7 +58,11 @@ mediaRouter.post(
 mediaRouter.get(
   "/:id",
   asyncRoute(async (req, res, next) => {
-    const media = await MediaAssetModel.findById(parseObjectId(String(req.params.id), "media id"));
+    const context = requireContext(req);
+    const media = await MediaAssetModel.findOne({
+      _id: parseObjectId(String(req.params.id), "media id"),
+      workspaceId: context.workspaceId,
+    });
     if (!media) {
       throw new AppError(404, "media not found");
     }
@@ -75,7 +79,11 @@ mediaRouter.get(
 mediaRouter.delete(
   "/:id",
   asyncRoute(async (req, res) => {
-    const media = await MediaAssetModel.findById(parseObjectId(String(req.params.id), "media id"));
+    const context = requireContext(req);
+    const media = await MediaAssetModel.findOne({
+      _id: parseObjectId(String(req.params.id), "media id"),
+      workspaceId: context.workspaceId,
+    });
     if (!media) {
       throw new AppError(404, "media not found");
     }

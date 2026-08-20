@@ -1,14 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { Types } from "mongoose";
+import { AppError } from "./errors.js";
 
-export class AppError extends Error {
-  statusCode: number;
-
-  constructor(statusCode: number, message: string) {
-    super(message);
-    this.statusCode = statusCode;
-  }
-}
+export { AppError };
 
 export function asyncRoute(
   handler: (req: Request, res: Response, next: NextFunction) => Promise<void> | void,

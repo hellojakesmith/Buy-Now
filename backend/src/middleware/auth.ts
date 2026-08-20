@@ -6,6 +6,11 @@ import { WorkspaceModel } from "../models/Workspace.js";
 import { env } from "../config/env.js";
 import { AppError, asyncRoute } from "../utils/http.js";
 import { hashSessionToken, parseSessionCookie } from "../utils/auth.js";
+import type { WorkspaceRole } from "../types/roles.js";
+
+function asRole(role: unknown): WorkspaceRole | undefined {
+  return role === "owner" || role === "admin" || role === "member" ? role : undefined;
+}
 
 export async function authenticateRequest(req: Request): Promise<boolean> {
   const token = parseSessionCookie(req.headers.cookie);
@@ -30,19 +35,28 @@ export async function authenticateRequest(req: Request): Promise<boolean> {
     userId: String(user._id),
     workspaceSlug: workspace.slug,
     userEmail: user.email,
+    role: asRole(user.role) ?? "member",
   };
   return true;
 }
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {
+    if (req.context?.userId && req.context.workspaceId && req.context.role) return next();
     if (await authenticateRequest(req)) return next();
 
     if (env.nodeEnv !== "production") {
       const workspaceId = req.header("x-workspace-id");
       const userId = req.header("x-user-id");
       if (workspaceId && userId && Types.ObjectId.isValid(workspaceId) && Types.ObjectId.isValid(userId)) {
-        req.context = { workspaceId, userId };
+        const user = await UserModel.findOne({ _id: userId, workspaceId }).lean();
+        if (!user) return next(new AppError(401, "Authentication required"));
+        req.context = {
+          workspaceId,
+          userId,
+          role: asRole(user.role) ?? "member",
+          userEmail: user.email,
+        };
         return next();
       }
     }
