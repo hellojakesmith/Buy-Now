@@ -103,9 +103,27 @@ The exact item key remains resource-specific (`contacts`, `opportunities`, `prod
 
 ## EPIC 4+ — Product Features
 
-No feature in EPIC 4 or later is being marked complete by the API hardening/authentication passes. Implementation will proceed in dependency order:
+Implementation proceeds in dependency order:
 
 `Forms → CRM → Pipeline → Creator Brand → Media → Commerce → Analytics → Automation → Notifications → AI → Integrations → Launch`
+
+## EPIC 5 — CRM / Contacts
+
+- [x] Contact detail (enriched `GET /contacts/:id` returns activities, opportunities, and orders as a unified timeline).
+- [x] Contact notes (`POST /contacts/:id/notes` records a note activity).
+- [x] Follow-up task/reminder (`POST /contacts/:id/follow-ups` creates a task activity with optional due date).
+- [x] Activity timeline (contact detail returns the activity history).
+- [x] Opportunity history (contact detail returns associated opportunities).
+- [x] Purchase history (contact detail returns associated orders).
+- [x] Source filter (contact list accepts `source`).
+- [x] Tags filter (contact list accepts comma-separated `tags`).
+- [ ] Leads list / customer list filter (dedicated list views).
+- [ ] Sorting.
+- [ ] Contact edit (frontend).
+- [ ] Contact archive/unarchive (frontend visibility).
+- [ ] Contact merge/deduplication strategy.
+- [ ] Contact ownership (frontend assignment).
+- [ ] Bulk operations where useful.
 
 ## CI / Reliability Foundation
 
@@ -157,6 +175,11 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 - Duplicate submissions (same form + email within 24 hours) reuse the existing record instead of creating extra contacts.
 - Contact upsert matches on email or phone only — not name alone.
 - Form editor can add, edit, require, and delete fields; publish, unpublish, share, preview, and embed.
+- Enriched contact detail endpoint returning activities, opportunities, and orders as a unified timeline.
+- Added contact notes endpoint (`POST /contacts/:id/notes`).
+- Added follow-up task/reminder endpoint (`POST /contacts/:id/follow-ups`).
+- Added source and tags filters to the contact list endpoint.
+- Added a database index for workspace + source + lastActivityAt on contacts.
 
 ### Remaining before EPIC 1 can close
 
@@ -172,4 +195,4 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 
 ## Next Implementation Target
 
-**EPIC 5 CRM:** contact detail, tags, source filters, and follow-up — the lead-capture golden path is now in place. SMTP for password reset can still land in parallel.
+**EPIC 5 CRM (frontend):** wire contact detail, notes, and follow-up UI to the new endpoints; add leads/customer list views and sorting. **EPIC 2:** complete validation for activity/media/notification/dashboard inputs, structured server logging, and remaining pagination + database indexes. SMTP for password reset can still land in parallel.
