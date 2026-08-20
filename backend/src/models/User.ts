@@ -8,6 +8,7 @@ const UserSchema = new Schema(
     name: { type: String, required: true, trim: true },
     role: { type: String, enum: ["owner", "admin", "member"], default: "owner" },
     avatarUrl: { type: String },
+    passwordHash: { type: String, select: false },
     lastLoginAt: { type: Date },
     authProvider: { type: String, default: "email" },
     authProviderUserId: { type: String },
