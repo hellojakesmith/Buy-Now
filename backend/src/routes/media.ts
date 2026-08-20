@@ -1,28 +1,36 @@
 import { Router } from "express";
+import { z } from "zod";
 import multer from "multer";
 import { deleteFromGridFs, openDownloadStream, uploadBufferToGridFs } from "../services/gridfs.js";
 import { MediaAssetModel } from "../models/MediaAsset.js";
-import { asyncRoute, AppError, parseObjectId, requireContext } from "../utils/http.js";
+import { asyncRoute, AppError, parseObjectId, requireContext, isValidObjectId } from "../utils/http.js";
+import { validateBody } from "../middleware/validate.js";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 export const mediaRouter = Router();
 
+const mediaBodySchema = z.object({
+  kind: z.enum(["image", "video"]),
+  purpose: z.enum(["product", "page", "form", "avatar", "marketing", "other"]).default("other"),
+  altText: z.string().trim().max(500).optional(),
+  caption: z.string().trim().max(1000).optional(),
+  relatedEntityType: z.string().trim().max(100).optional(),
+  relatedEntityId: z.string().trim().max(100).refine((v) => !v || isValidObjectId(v), "Invalid related entity id").optional(),
+});
+
 mediaRouter.post(
   "/",
   upload.single("file"),
+  validateBody(mediaBodySchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
     if (!req.file) {
       throw new AppError(400, "file is required");
     }
 
-    const kind = String(req.body.kind ?? "");
-    if (!kind) {
-      throw new AppError(400, "kind is required");
-    }
+    const { kind, purpose, altText, caption, relatedEntityType, relatedEntityId } = req.body;
 
-    const purpose = req.body.purpose ?? "other";
     const gridFsFileId = await uploadBufferToGridFs({
       buffer: req.file.buffer,
       filename: req.file.originalname,
@@ -45,10 +53,10 @@ mediaRouter.post(
       originalName: req.file.originalname,
       mimeType: req.file.mimetype,
       sizeBytes: req.file.size,
-      altText: req.body.altText,
-      caption: req.body.caption,
-      relatedEntityType: req.body.relatedEntityType,
-      relatedEntityId: req.body.relatedEntityId,
+      altText,
+      caption,
+      relatedEntityType,
+      relatedEntityId: relatedEntityId ? parseObjectId(relatedEntityId, "related entity id") : undefined,
     });
 
     res.status(201).json({ media });

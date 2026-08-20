@@ -16,6 +16,7 @@ const NotificationSchema = new Schema(
 );
 
 NotificationSchema.index({ workspaceId: 1, userId: 1, readAt: 1 });
+NotificationSchema.index({ workspaceId: 1, userId: 1, createdAt: -1 });
 
 export type Notification = InferSchemaType<typeof NotificationSchema>;
 export const NotificationModel = mongoose.models.Notification || model("Notification", NotificationSchema);

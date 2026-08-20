@@ -180,6 +180,11 @@ Implementation proceeds in dependency order:
 - Added follow-up task/reminder endpoint (`POST /contacts/:id/follow-ups`).
 - Added source and tags filters to the contact list endpoint.
 - Added a database index for workspace + source + lastActivityAt on contacts.
+- Added Zod query validation and pagination to the activity list endpoint (filters by contact/opportunity/order/type).
+- Added Zod query validation and pagination to the notifications list endpoint (filters by unread/type).
+- Added Zod body validation to the media upload endpoint (kind, purpose, alt/caption, related entity).
+- Added a validated `range` query parameter to the dashboard summary endpoint (today/7d/30d/90d/all), backward-compatible default `all`.
+- Added a database index on { workspaceId, userId, createdAt } for paginated notification queries.
 
 ### Remaining before EPIC 1 can close
 
@@ -187,12 +192,10 @@ Implementation proceeds in dependency order:
 
 ### Remaining before EPIC 2 can close
 
-- Validate remaining routes such as activity, media, notifications, and dashboard inputs.
 - Add validation for page section schemas rather than generic arrays.
-- Complete pagination for every growing collection.
 - Add structured server logging.
 - Add/verify database indexes based on actual query patterns.
 
 ## Next Implementation Target
 
-**EPIC 5 CRM (frontend):** wire contact detail, notes, and follow-up UI to the new endpoints; add leads/customer list views and sorting. **EPIC 2:** complete validation for activity/media/notification/dashboard inputs, structured server logging, and remaining pagination + database indexes. SMTP for password reset can still land in parallel.
+**EPIC 2:** add validation for page section schemas, structured server logging, and verify database indexes against query patterns. **EPIC 5 CRM (frontend):** wire contact detail, notes, and follow-up UI; add leads/customer list views and sorting. SMTP for password reset can still land in parallel.
