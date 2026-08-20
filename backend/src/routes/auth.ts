@@ -5,11 +5,14 @@ import { UserModel } from "../models/User.js";
 import { normalizeSlug } from "../utils/http.js";
 import { ensureDefaultPipeline } from "../services/seed.js";
 import { asyncRoute, AppError, requireContext } from "../utils/http.js";
+import { validateBody } from "../middleware/validate.js";
+import { bootstrapAuthSchema } from "../schemas/auth.js";
 
 export const authRouter = Router();
 
 authRouter.post(
   "/bootstrap",
+  validateBody(bootstrapAuthSchema),
   asyncRoute(async (req, res) => {
     const workspaceName = String(req.body.workspaceName ?? req.body.name ?? "Buy Now Workspace").trim();
     const workspaceSlug = normalizeSlug(String(req.body.workspaceSlug ?? workspaceName));
