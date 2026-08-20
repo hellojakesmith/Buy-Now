@@ -15,6 +15,7 @@ import { activityRouter } from "./activity.js";
 import { dashboardRouter } from "./dashboard.js";
 import { publicRouter } from "./public.js";
 import { usersRouter } from "./users.js";
+import { aiRouter } from "./ai.js";
 import { requireAuth } from "../middleware/auth.js";
 
 export const apiRouter = Router();
@@ -36,3 +37,4 @@ apiRouter.use("/notifications", notificationsRouter);
 apiRouter.use("/activity", activityRouter);
 apiRouter.use("/dashboard", dashboardRouter);
 apiRouter.use("/media", mediaRouter);
+apiRouter.use("/ai", aiRouter);
