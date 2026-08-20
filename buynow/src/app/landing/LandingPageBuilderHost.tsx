@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
 import LandingPageBuilderStudio from "./LandingPageBuilderStudio";
+import LandingPageTemplatePreview from "./LandingPageTemplatePreview";
 import { createLandingPageDocument } from "./landingBuilder";
 import type { LandingPageDocument } from "./LandingPageRenderer";
 
@@ -21,6 +22,13 @@ function templateKeyForPage(page: CreatedPage): Parameters<typeof createLandingP
     consultation: "service-business",
     launch: "creator-brand",
     local: "local-business",
+    creator: "creator-brand",
+    coach: "coach",
+    agency: "agency",
+    service: "service-business",
+    magnet: "lead-magnet",
+    waitlist: "waitlist",
+    product: "product-offer",
   };
   return mapping[template ?? ""] ?? "creator-brand";
 }
@@ -39,6 +47,7 @@ function buildInitialDocument(page: CreatedPage): LandingPageDocument {
 export default function LandingPageBuilderHost() {
   const [page, setPage] = useState<CreatedPage | null>(null);
   const [document, setDocument] = useState<LandingPageDocument | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +64,7 @@ export default function LandingPageBuilderHost() {
         }
         setPage(response.page);
         setDocument(initialDocument);
+        setPreviewOpen(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unable to open the landing page editor");
       } finally {
@@ -80,13 +90,16 @@ export default function LandingPageBuilderHost() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white">
-      <LandingPageBuilderStudio
-        pageId={page._id}
-        initialDocument={document}
-        onBack={() => { setPage(null); setDocument(null); }}
-        onPreview={() => undefined}
-      />
-    </div>
+    <>
+      <div className="fixed inset-0 z-[100] bg-white">
+        <LandingPageBuilderStudio
+          pageId={page._id}
+          initialDocument={document}
+          onBack={() => { setPage(null); setDocument(null); setPreviewOpen(false); }}
+          onPreview={() => setPreviewOpen(true)}
+        />
+      </div>
+      {previewOpen && <LandingPageTemplatePreview document={document} onClose={() => setPreviewOpen(false)} />}
+    </>
   );
 }
