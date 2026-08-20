@@ -1,12 +1,13 @@
 import type { LandingPageDocument } from "./LandingPageRenderer";
 import { getTemplateMedia } from "./templateMedia";
 
-type TemplateKey = "creator-brand" | "coach" | "service-business" | "agency" | "local-business" | "lead-magnet" | "waitlist" | "product-offer";
+type TemplateKey = "creator-brand" | "coach" | "fitness-coach" | "service-business" | "agency" | "local-business" | "lead-magnet" | "waitlist" | "product-offer";
 type TemplateConfig = { headline: string; body: string; cta: string; primary: string; primaryText: string; surface: string; text: string; muted: string; benefit: string; proof: string; faq: string };
 
 const templates: Record<TemplateKey, TemplateConfig> = {
   "creator-brand": { headline: "Build a brand people remember", body: "Share what you do, who you help, and the next step in one polished mobile experience.", cta: "Get started", primary: "#7448F6", primaryText: "#FFFFFF", surface: "#FCFAFF", text: "#17121F", muted: "#746B7D", benefit: "Turn your audience into a brand community with a clear story and memorable offer.", proof: "The page made our offer feel instantly more professional.", faq: "Can I customize this page?" },
   coach: { headline: "Make your next transformation easier to say yes to", body: "Explain the outcome, build trust, and give visitors one clear next action.", cta: "Book a consultation", primary: "#0F766E", primaryText: "#FFFFFF", surface: "#F6FFFD", text: "#10201E", muted: "#5F716D", benefit: "Show the transformation, your method, and exactly what clients get when you work together.", proof: "I knew exactly what the program would help me accomplish.", faq: "How does coaching work?" },
+  "fitness-coach": { headline: "Get the body you want without living in the gym", body: "A premium fitness coaching experience built around your goals, your schedule, and measurable transformation.", cta: "Apply for coaching", primary: "#E11D48", primaryText: "#FFFFFF", surface: "#FFF8FA", text: "#171717", muted: "#6B7280", benefit: "Personalized training, nutrition guidance, accountability, and a clear plan designed to help you make lasting progress.", proof: "I finally had a plan I could follow and the results showed up in the mirror.", faq: "Who is the coaching program for?" },
   "service-business": { headline: "Turn local interest into real customers", body: "Show your value quickly and make it effortless for a visitor to contact you.", cta: "Request a quote", primary: "#2563EB", primaryText: "#FFFFFF", surface: "#F7FAFF", text: "#111827", muted: "#64748B", benefit: "Make your services, process, and proof easy to understand before a visitor ever calls.", proof: "They made it incredibly easy to understand what we were getting.", faq: "How quickly can I get a quote?" },
   agency: { headline: "Turn more traffic into qualified opportunities", body: "Lead with your strongest proof, explain the offer, and make the next step obvious.", cta: "Start a conversation", primary: "#111827", primaryText: "#FFFFFF", surface: "#FFFFFF", text: "#111827", muted: "#6B7280", benefit: "A conversion-focused structure for showing expertise, proof, services, and a strong next step.", proof: "We started getting better leads instead of simply more traffic.", faq: "What happens after I reach out?" },
   "local-business": { headline: "Make it easy for customers to choose you", body: "A fast, trustworthy page designed for visitors who are ready to take action.", cta: "Contact us", primary: "#EA580C", primaryText: "#FFFFFF", surface: "#FFF9F5", text: "#24140C", muted: "#7C6558", benefit: "Put your location, services, reviews, and contact path where mobile customers can find them immediately.", proof: "Friendly, fast, and exactly what we needed.", faq: "Where are you located?" },
@@ -20,6 +21,49 @@ export function createLandingPageDocument(templateKey: TemplateKey = "creator-br
   const media = getTemplateMedia(templateKey);
   const heroMedia = media.find((asset) => asset.kind === "hero");
   const backgroundMedia = media.find((asset) => asset.kind === "background");
+
+  if (templateKey === "fitness-coach") {
+    const beforeImage = media.find((asset) => asset.id === "fitness-before-1");
+    const afterImage = media.find((asset) => asset.id === "fitness-after-1");
+    return {
+      schemaVersion: 1,
+      sections: [
+        { id: "hero-1", type: "hero", visible: true, blocks: [
+          ...(heroMedia ? [{ type: "image" as const, assetId: heroMedia.id, alt: heroMedia.alt }] : []),
+          { type: "text", text: config.headline },
+          { type: "text", text: config.body },
+          { type: "button", label: config.cta, action: { type: "url", url: "https://example.com/apply" } },
+        ], settings: { variant: templateKey, backgroundAssetId: backgroundMedia?.id } },
+        { id: "vsl-1", type: "vsl", visible: true, blocks: [
+          { type: "text", text: "Watch the free training" },
+          { type: "text", text: "See the exact framework I use to help clients lose fat, build confidence, and stay consistent." },
+          { type: "button", label: "Watch the VSL", action: { type: "url", url: "https://example.com/vsl" } },
+        ], settings: { variant: "fitness-coach" } },
+        { id: "benefits-1", type: "benefits", visible: true, blocks: [
+          { type: "text", text: config.benefit },
+          { type: "text", text: "Training built around your schedule" },
+          { type: "text", text: "Simple nutrition targets you can actually follow" },
+          { type: "text", text: "Weekly accountability and progress tracking" },
+        ], settings: { variant: templateKey } },
+        { id: "transformations-1", type: "social-proof", visible: true, blocks: [
+          ...(beforeImage ? [{ type: "image" as const, assetId: beforeImage.id, alt: beforeImage.alt }] : []),
+          ...(afterImage ? [{ type: "image" as const, assetId: afterImage.id, alt: afterImage.alt }] : []),
+          { type: "testimonial", quote: config.proof, author: "Client transformation" },
+        ], settings: { variant: "fitness-before-after" } },
+        { id: "application-1", type: "cta", visible: true, blocks: [
+          { type: "text", text: "Ready to start your transformation?" },
+          { type: "button", label: "Apply for coaching", action: { type: "url", url: "https://example.com/apply" } },
+        ], settings: { variant: templateKey } },
+        { id: "faq-1", type: "faq", visible: true, blocks: [{ type: "faq", question: config.faq, answer: "Customize this answer with your coaching offer, client fit, program length, and expectations." }], settings: { variant: templateKey } },
+        { id: "cta-1", type: "cta", visible: true, blocks: [{ type: "button", label: config.cta, action: { type: "url", url: "https://example.com/apply" } }], settings: { variant: templateKey } },
+      ],
+      theme: {
+        colors: { primary: config.primary, primaryText: config.primaryText, surface: config.surface, text: config.text, muted: config.muted },
+        typography: { fontFamily: "Inter, system-ui, sans-serif" },
+        buttons: { size: "large" }, spacing: { section: 34 }, radius: { button: 16, card: 22 },
+      }, references: [], metadata: { templateKey, aiGenerated: false },
+    };
+  }
 
   return {
     schemaVersion: 1,
