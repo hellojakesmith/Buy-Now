@@ -2,8 +2,6 @@
 
 Last updated: 2026-08-20
 
-This progress file records the implementation work for CB-3 without marking roadmap work complete until it is integrated into the authenticated application shell and verified through CI.
-
 ## Completed in this pass
 
 - [x] Added a mobile-first section-based Landing Page Builder screen.
@@ -18,17 +16,17 @@ This progress file records the implementation work for CB-3 without marking road
 - [x] Added mobile sticky Save/Preview actions.
 - [x] Added a shared landing-page preview renderer consuming the versioned builder document shape.
 - [x] Added template document factory for creator brand, coach, service business, agency, local business, lead magnet, waitlist, and product-offer starting points.
+- [x] Integrated the builder into the authenticated application shell.
+- [x] Loaded an existing Page and hydrated its versioned `builderDocument`.
+- [x] Fixed the mobile section editing workflow so every section opens an explicit full-screen bottom-sheet editor.
+- [x] Added editable text, testimonials, FAQs, buttons, image metadata, Form references, Product references, visibility, section ordering, and block add/remove controls.
 
 ## Intentionally not marked complete yet
 
-The following remain part of CB-3 and must be completed before the epic exit gate:
-
-- [ ] Integrate the builder into the authenticated `App.tsx` navigation flow.
-- [ ] Load an existing Page and hydrate its `builderDocument`.
 - [ ] Add real Form/Product reference pickers.
 - [ ] Add media-library integration.
 - [ ] Add global theme editor.
-- [ ] Add autosave/debounced persistence.
+- [ ] Add autosave/debounced persistence and draft recovery.
 - [ ] Add preview/public renderer integration using the same renderer contract.
 - [ ] Add publish validation and published revision isolation.
 - [ ] Add SEO/Open Graph editing.
@@ -39,6 +37,6 @@ The following remain part of CB-3 and must be completed before the epic exit gat
 
 ## Product rule
 
-The builder must remain mobile-first and progressive-disclosure based. Do not turn this into a desktop canvas editor. The user's primary workflow is:
+The builder must remain mobile-first and progressive-disclosure based. Do not turn this into a desktop canvas editor. The primary workflow is:
 
 `Template/AI → Edit sections → Connect real assets → Preview → Publish`
