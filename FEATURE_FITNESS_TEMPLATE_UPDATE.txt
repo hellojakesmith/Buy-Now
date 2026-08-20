@@ -1,0 +1,1 @@
+Temporary trigger for the fitness template gallery update workflow. This file is intentionally removed by the workflow.
