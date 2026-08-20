@@ -10,8 +10,9 @@ import { requestContextMiddleware } from "./middleware/context.js";
 export function createApp() {
   const app = express();
 
+  app.set("trust proxy", env.nodeEnv === "production" ? 1 : 0);
   app.use(helmet());
-  app.use(cors({ origin: env.corsOrigin === "*" ? true : env.corsOrigin }));
+  app.use(cors({ origin: env.corsOrigin === "*" ? true : env.corsOrigin, credentials: true }));
   app.use(express.json({ limit: "2mb" }));
   app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
   app.use(requestContextMiddleware);
