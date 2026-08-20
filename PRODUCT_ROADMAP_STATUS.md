@@ -16,8 +16,8 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 - [ ] Document canonical domain entities.
 - [ ] Document frontend/backend ownership boundaries.
 - [ ] Define API response contracts.
-- [ ] Define authentication/session architecture.
-- [ ] Define public vs authenticated routes.
+- [x] Define authentication/session architecture.
+- [x] Define public vs authenticated routes.
 - [ ] Define page schema versioning strategy.
 - [ ] Define analytics event taxonomy.
 - [ ] Define payment/order state machine.
@@ -27,20 +27,21 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 
 ## EPIC 1 — Production Authentication & Workspace Security
 
-- [ ] Production sign-up/sign-in/sign-out.
-- [ ] Production session/token management.
-- [ ] Secure session persistence.
+- [x] Production sign-up/sign-in/sign-out backend endpoints.
+- [x] Production session/token management backend.
+- [x] Secure session persistence with hashed tokens, HttpOnly cookies, expiry, and TTL cleanup.
 - [ ] Password reset or production identity provider.
 - [x] Authenticated `/me` endpoint exists and is retained as the identity contract.
-- [ ] Remove browser-provided identity headers as proof of identity.
-- [ ] Derive workspace/user context from authenticated session.
-- [ ] Workspace membership and authorization.
-- [ ] Tenant-isolation audit across private routes.
+- [x] Remove browser-provided identity headers as proof of identity in production.
+- [x] Derive workspace/user context from authenticated session in production.
+- [ ] Workspace membership and authorization/RBAC audit.
+- [ ] Tenant-isolation audit across every private route.
 - [ ] Rate limiting.
 - [ ] CSRF protection where applicable.
 - [ ] Permission-change audit logging.
+- [ ] Frontend migration from bootstrap/header identity to session auth.
 
-> **Important:** `/auth/bootstrap` is still prototype authentication. It is intentionally **not** marked production-complete.
+> **Important:** The backend authentication foundation is implemented, but EPIC 1 is intentionally **not production-complete** until frontend migration, authorization/RBAC, tenant-isolation audit, rate limiting, and other security controls are verified.
 
 ## EPIC 2 — API Contracts, Validation & Backend Hardening
 
@@ -96,10 +97,12 @@ The exact item key remains resource-specific (`contacts`, `opportunities`, `prod
 - [ ] Add global error boundary.
 - [ ] Standardize loading/empty/error/success states.
 - [ ] Verify mobile keyboard/safe-area behavior.
+- [ ] Migrate API client to cookie-based authenticated sessions.
+- [ ] Add login/register/logout UI.
 
 ## EPIC 4+ — Product Features
 
-No feature in EPIC 4 or later is being marked complete by the API hardening pass. Implementation will proceed in dependency order:
+No feature in EPIC 4 or later is being marked complete by the API hardening/authentication passes. Implementation will proceed in dependency order:
 
 `Forms → CRM → Pipeline → Creator Brand → Media → Commerce → Analytics → Automation → Notifications → AI → Integrations → Launch`
 
@@ -125,6 +128,22 @@ No feature in EPIC 4 or later is being marked complete by the API hardening pass
 - Added ObjectId conversion/validation at key relationship boundaries.
 - Escaped user-provided contact/product/page/form search strings before constructing MongoDB regular expressions.
 - Kept all implemented queries explicitly scoped to the current workspace context.
+- Added password hashing using Node's built-in scrypt.
+- Added persistent hashed session tokens with MongoDB TTL expiration.
+- Added HttpOnly cookie-based login/logout sessions.
+- Added registration and login endpoints.
+- Protected private API route groups behind authentication in production.
+- Disabled prototype `/auth/bootstrap` authentication in production.
+- Kept public forms/pages and health endpoints accessible without authentication.
+
+### Remaining before EPIC 1 can close
+
+- Migrate the frontend to `/auth/register`, `/auth/login`, `/auth/logout`, and `/auth/me`.
+- Add password reset or external production identity provider.
+- Complete workspace membership/RBAC authorization.
+- Audit tenant isolation across every private route.
+- Add rate limiting and CSRF protections where applicable.
+- Add authentication/security tests.
 
 ### Remaining before EPIC 2 can close
 
@@ -136,4 +155,4 @@ No feature in EPIC 4 or later is being marked complete by the API hardening pass
 
 ## Next Implementation Target
 
-**EPIC 1:** replace prototype `/auth/bootstrap` identity with real authenticated sessions and enforce workspace authorization at the middleware boundary before expanding customer-facing functionality.
+**EPIC 3 + EPIC 1 frontend migration:** connect the existing frontend to the new session-based authentication contract, remove hard-coded/header identity from production API calls, and then proceed into the Forms → CRM product sequence.
