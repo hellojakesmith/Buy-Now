@@ -6,6 +6,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test src/middleware/rateLimit.test.ts src/middleware/csrf.test.ts src/middleware/rbac.test.ts src/utils/auth.test.ts",
     "start": "node dist/server.js"
   },
   "dependencies": {

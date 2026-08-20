@@ -3,13 +3,18 @@ import { Types } from "mongoose";
 import { WorkspaceModel } from "../models/Workspace.js";
 import { UserModel } from "../models/User.js";
 import { SessionModel } from "../models/Session.js";
+import { PasswordResetModel } from "../models/PasswordReset.js";
 import { normalizeSlug, asyncRoute, AppError } from "../utils/http.js";
 import { validateBody } from "../middleware/validate.js";
-import { registerAuthSchema, loginAuthSchema, bootstrapAuthSchema } from "../schemas/auth.js";
+import { registerAuthSchema, loginAuthSchema, bootstrapAuthSchema, forgotPasswordSchema, resetPasswordSchema } from "../schemas/auth.js";
 import { createSessionToken, hashPassword, hashSessionToken, SESSION_COOKIE_NAME, SESSION_TTL_MS, verifyPassword } from "../utils/auth.js";
 import { ensureDefaultPipeline } from "../services/seed.js";
+import { rateLimit } from "../middleware/rateLimit.js";
 
 export const authRouter = Router();
+
+const RESET_TTL_MS = 1000 * 60 * 60;
+const authAbuseLimit = rateLimit({ keyPrefix: "auth", windowMs: 15 * 60 * 1000, max: 10 });
 
 function setSessionCookie(res: Response, token: string) {
   const secure = process.env.NODE_ENV === "production";
@@ -26,7 +31,7 @@ function publicUser(user: any) {
   return value;
 }
 
-authRouter.post("/register", validateBody(registerAuthSchema), asyncRoute(async (req, res) => {
+authRouter.post("/register", authAbuseLimit, validateBody(registerAuthSchema), asyncRoute(async (req, res) => {
   const { workspaceName, workspaceSlug, name, email, password } = req.body;
   const slug = normalizeSlug(workspaceSlug);
 
@@ -34,7 +39,7 @@ authRouter.post("/register", validateBody(registerAuthSchema), asyncRoute(async 
 
   const workspaceId = new Types.ObjectId();
   const userId = new Types.ObjectId();
-  const workspace = await WorkspaceModel.create({ _id: workspaceId, name, slug, ownerUserId: userId });
+  const workspace = await WorkspaceModel.create({ _id: workspaceId, name: workspaceName, slug, ownerUserId: userId });
   const user = await UserModel.create({ _id: userId, workspaceId, email: email.toLowerCase(), name, role: "owner", passwordHash: hashPassword(password), authProvider: "email", lastLoginAt: new Date() });
   await ensureDefaultPipeline(String(workspace._id), String(user._id));
 
@@ -44,7 +49,7 @@ authRouter.post("/register", validateBody(registerAuthSchema), asyncRoute(async 
   res.status(201).json({ workspace, user: publicUser(user) });
 }));
 
-authRouter.post("/login", validateBody(loginAuthSchema), asyncRoute(async (req, res) => {
+authRouter.post("/login", authAbuseLimit, validateBody(loginAuthSchema), asyncRoute(async (req, res) => {
   const email = String(req.body.email).trim().toLowerCase();
   const user = await UserModel.findOne({ email }).select("+passwordHash");
   if (!user?.passwordHash || !verifyPassword(String(req.body.password), user.passwordHash)) throw new AppError(401, "Invalid email or password");
@@ -67,6 +72,44 @@ authRouter.post("/logout", asyncRoute(async (req, res) => {
   res.status(204).send();
 }));
 
+authRouter.post("/forgot-password", authAbuseLimit, validateBody(forgotPasswordSchema), asyncRoute(async (req, res) => {
+  const email = String(req.body.email).trim().toLowerCase();
+  const user = await UserModel.findOne({ email }).select("+passwordHash").lean();
+  const generic = { message: "If an account exists for that email, password reset instructions were created." };
+
+  if (!user?.passwordHash) {
+    res.json(generic);
+    return;
+  }
+
+  const token = createSessionToken();
+  await PasswordResetModel.create({
+    userId: user._id,
+    email,
+    tokenHash: hashSessionToken(token),
+    expiresAt: new Date(Date.now() + RESET_TTL_MS),
+  });
+
+  res.json(process.env.NODE_ENV === "production" ? generic : { ...generic, resetToken: token });
+}));
+
+authRouter.post("/reset-password", authAbuseLimit, validateBody(resetPasswordSchema), asyncRoute(async (req, res) => {
+  const tokenHash = hashSessionToken(String(req.body.token));
+  const reset = await PasswordResetModel.findOne({ tokenHash, usedAt: { $exists: false }, expiresAt: { $gt: new Date() } });
+  if (!reset) throw new AppError(400, "Reset link is invalid or has expired");
+
+  const user = await UserModel.findById(reset.userId).select("+passwordHash");
+  if (!user) throw new AppError(400, "Reset link is invalid or has expired");
+
+  user.passwordHash = hashPassword(String(req.body.password));
+  await user.save();
+  reset.usedAt = new Date();
+  await reset.save();
+  await SessionModel.deleteMany({ userId: user._id });
+
+  res.json({ message: "Password updated. You can sign in with your new password." });
+}));
+
 authRouter.get("/me", asyncRoute(async (req, res) => {
   if (!req.context) throw new AppError(401, "Authentication required");
   const [workspace, user] = await Promise.all([
@@ -78,7 +121,7 @@ authRouter.get("/me", asyncRoute(async (req, res) => {
 }));
 
 // Legacy bootstrap remains available only outside production while the frontend migrates to /register and /login.
-authRouter.post("/bootstrap", validateBody(bootstrapAuthSchema), asyncRoute(async (req, res) => {
+authRouter.post("/bootstrap", authAbuseLimit, validateBody(bootstrapAuthSchema), asyncRoute(async (req, res) => {
   if (process.env.NODE_ENV === "production") throw new AppError(410, "Bootstrap authentication is disabled in production");
   const workspaceName = String(req.body.workspaceName ?? req.body.name ?? "Buy Now Workspace").trim();
   const workspaceSlug = normalizeSlug(String(req.body.workspaceSlug ?? workspaceName));

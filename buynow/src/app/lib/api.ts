@@ -48,13 +48,23 @@ export function contextFromAuth(response: AuthResponse): AppContext {
   };
 }
 
+function errorMessageFromBody(body: string, fallback: string) {
+  try {
+    const parsed = JSON.parse(body) as { message?: string };
+    if (parsed?.message) return parsed.message;
+  } catch {
+    /* use raw body */
+  }
+  return body || fallback;
+}
+
 export async function authRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
   if (!(options.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   const response = await fetch(`${API_BASE}${path}`, { ...options, credentials: "include", headers });
   if (!response.ok) {
     const message = await response.text();
-    throw new Error(message || `Request failed: ${response.status}`);
+    throw new Error(errorMessageFromBody(message, `Request failed: ${response.status}`));
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
@@ -65,7 +75,7 @@ export async function getCurrentAuth(): Promise<AuthResponse | null> {
   if (response.status === 401) return null;
   if (!response.ok) {
     const message = await response.text();
-    throw new Error(message || `Authentication check failed: ${response.status}`);
+    throw new Error(errorMessageFromBody(message, `Authentication check failed: ${response.status}`));
   }
   return response.json() as Promise<AuthResponse>;
 }
@@ -81,7 +91,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}, _co
   const response = await fetch(`${API_BASE}${path}`, { ...options, credentials: "include", headers });
   if (!response.ok) {
     const message = await response.text();
-    throw new Error(message || `Request failed: ${response.status}`);
+    throw new Error(errorMessageFromBody(message, `Request failed: ${response.status}`));
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;

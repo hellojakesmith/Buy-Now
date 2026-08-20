@@ -3,8 +3,11 @@ import { FormModel } from "../models/Form.js";
 import { PageModel } from "../models/Page.js";
 import { processFormSubmission } from "../services/forms.js";
 import { asyncRoute, AppError } from "../utils/http.js";
+import { rateLimit } from "../middleware/rateLimit.js";
 
 export const publicRouter = Router();
+
+const publicSubmitLimit = rateLimit({ keyPrefix: "public-submit", windowMs: 15 * 60 * 1000, max: 20 });
 
 publicRouter.get(
   "/forms/:slug",
@@ -17,6 +20,7 @@ publicRouter.get(
 
 publicRouter.post(
   "/forms/:slug/submissions",
+  publicSubmitLimit,
   asyncRoute(async (req, res) => {
     const form = await FormModel.findOne({ slug: String(req.params.slug), status: "published" });
     if (!form) throw new AppError(404, "Form not found");

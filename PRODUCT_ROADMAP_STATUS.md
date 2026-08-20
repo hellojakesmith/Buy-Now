@@ -30,18 +30,18 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 - [x] Production sign-up/sign-in/sign-out backend endpoints.
 - [x] Production session/token management backend.
 - [x] Secure session persistence with hashed tokens, HttpOnly cookies, expiry, and TTL cleanup.
-- [ ] Password reset or production identity provider.
+- [x] Password reset endpoints (`/auth/forgot-password`, `/auth/reset-password`). Email delivery is still outstanding.
 - [x] Authenticated `/me` endpoint exists and is retained as the identity contract.
 - [x] Remove browser-provided identity headers as proof of identity in production.
 - [x] Derive workspace/user context from authenticated session in production.
-- [ ] Workspace membership and authorization/RBAC audit.
-- [ ] Tenant-isolation audit across every private route.
-- [ ] Rate limiting.
-- [ ] CSRF protection where applicable.
-- [ ] Permission-change audit logging.
+- [x] Workspace membership and authorization/RBAC audit.
+- [x] Tenant-isolation audit across every private route.
+- [x] Rate limiting.
+- [x] CSRF protection where applicable.
+- [x] Permission-change audit logging.
 - [x] Frontend migration from bootstrap/header identity to session auth.
 
-> **Important:** The backend authentication foundation and frontend session migration are implemented, but EPIC 1 is intentionally **not production-complete** until authorization/RBAC, tenant-isolation verification, rate limiting, password recovery/identity requirements, and security testing are completed.
+> **Important:** EPIC 1 now includes RBAC, tenant isolation, rate limiting, CSRF origin checks, password reset tokens, and security unit tests. Remaining production identity work is SMTP/email delivery for password reset.
 
 ## EPIC 2 — API Contracts, Validation & Backend Hardening
 
@@ -56,12 +56,12 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 - [ ] Validate form field schemas.
 - [x] Validate pagination parameters on all currently paginated resource lists.
 - [ ] Validate sorting parameters across all list endpoints.
-- [ ] Standardize API error responses.
-- [ ] Add request IDs/correlation IDs.
+- [x] Standardize API error responses.
+- [x] Add request IDs/correlation IDs.
 - [ ] Add structured server logging.
-- [ ] Add safe production error handling.
+- [x] Add safe production error handling.
 - [ ] Add database indexes for high-volume queries.
-- [ ] Add pagination to all growing collections.
+- [ ] Add pagination to every growing collection.
 - [x] Add search/filter support to contacts.
 - [x] Add search/filter support to opportunities.
 - [x] Add search/filter support to orders.
@@ -112,7 +112,8 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 - [x] Add GitHub Actions CI for frontend typecheck/build.
 - [x] Add GitHub Actions CI for backend typecheck/build.
 - [x] Remove tracked macOS `.DS_Store` metadata.
-- [ ] Add automated unit/integration/E2E tests.
+- [x] Add automated unit tests for auth hashing, rate limiting, CSRF origin checks, and RBAC.
+- [ ] Add automated integration/E2E tests.
 - [ ] Add production error monitoring.
 - [ ] Add uptime monitoring.
 - [ ] Add database backup/restore verification.
@@ -142,23 +143,27 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 - Removed client-supplied identity headers from frontend API requests.
 - Removed the frontend dependency on `/auth/bootstrap`.
 - Added accessible Sign out control on the Settings screen that calls `/auth/logout`, clears the HttpOnly session cookie, clears local context, and returns the user to the login gate.
+- Added IP rate limits for API traffic, auth abuse, and public form submissions.
+- Added CSRF origin checks for cookie-authenticated mutating requests.
+- Attached workspace role to the authenticated session context.
+- Restricted user and workspace administration to admin/owner roles, with last-owner protection.
+- Scoped media GET/DELETE lookups to the current workspace.
+- Added hashed password-reset tokens and a frontend reset flow. Production still needs email delivery.
+- Recorded permission changes in an append-only audit log.
+- Added request IDs and a consistent `{ message, requestId, details? }` error shape.
 
 ### Remaining before EPIC 1 can close
 
-- Add password reset or external production identity provider.
-- Complete workspace membership/RBAC authorization.
-- Audit tenant isolation across every private route.
-- Add rate limiting and CSRF protections where applicable.
-- Add authentication/security tests.
+- Add SMTP/email delivery (or an external identity provider) so password reset does not depend on returning a development token.
 
 ### Remaining before EPIC 2 can close
 
 - Validate remaining routes such as activity, media, notifications, and dashboard inputs.
 - Add validation for page section and form-field domain schemas rather than generic arrays.
 - Complete pagination for every growing collection.
-- Add standardized API errors, request IDs, structured logging, and production-safe error handling.
+- Add structured server logging.
 - Add/verify database indexes based on actual query patterns.
 
 ## Next Implementation Target
 
-**EPIC 1 security completion + EPIC 3 shell hardening:** complete RBAC/tenant isolation, rate limiting, CSRF protections, and password recovery before expanding the Forms → CRM product sequence.
+**EPIC 4 Forms + EPIC 2 remaining validation:** production form-field schemas and the public lead-capture golden path, now that the security foundation is in place. SMTP for password reset can land in parallel.
