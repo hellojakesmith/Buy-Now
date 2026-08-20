@@ -1,21 +1,53 @@
 import { Router } from "express";
+import { z } from "zod";
 import { ContactModel } from "../models/Contact.js";
 import { asyncRoute, requireContext, parseObjectId, AppError } from "../utils/http.js";
 import { createActivity } from "../services/activities.js";
+import { validateBody, validateQuery } from "../middleware/validate.js";
+import { getPagination, getPaginationSkip, paginationMeta } from "../utils/pagination.js";
 
 export const contactsRouter = Router();
 
+const contactListQuerySchema = z.object({
+  status: z.string().trim().min(1).max(50).optional(),
+  kind: z.string().trim().min(1).max(50).optional(),
+  q: z.string().trim().max(100).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(25),
+});
+
+const contactBodySchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  email: z.string().trim().email().max(320).optional(),
+  phone: z.string().trim().max(50).optional(),
+  company: z.string().trim().max(200).optional(),
+  interest: z.string().trim().max(500).optional(),
+  source: z.string().trim().max(100).optional(),
+  kind: z.string().trim().max(50).optional(),
+  status: z.string().trim().max(50).optional(),
+  tags: z.array(z.string().trim().max(100)).max(50).optional(),
+  customFields: z.array(z.unknown()).max(100).optional(),
+});
+
+const contactPatchSchema = contactBodySchema.partial();
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 contactsRouter.get(
   "/",
+  validateQuery(contactListQuerySchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
-    const { status, q, kind } = req.query;
+    const { status, q, kind, page, pageSize } = req.query as z.infer<typeof contactListQuerySchema>;
+    const pagination = getPagination({ page, pageSize });
 
     const filter: Record<string, unknown> = { workspaceId: context.workspaceId };
-    if (status) filter.status = String(status);
-    if (kind) filter.kind = String(kind);
+    if (status) filter.status = status;
+    if (kind) filter.kind = kind;
     if (q) {
-      const query = String(q).trim();
+      const query = escapeRegExp(q);
       filter.$or = [
         { name: new RegExp(query, "i") },
         { email: new RegExp(query, "i") },
@@ -24,26 +56,30 @@ contactsRouter.get(
       ];
     }
 
-    const contacts = await ContactModel.find(filter).sort({ lastActivityAt: -1, createdAt: -1 }).lean();
-    res.json({ contacts });
+    const [contacts, total] = await Promise.all([
+      ContactModel.find(filter)
+        .sort({ lastActivityAt: -1, createdAt: -1 })
+        .skip(getPaginationSkip(pagination))
+        .limit(pagination.pageSize)
+        .lean(),
+      ContactModel.countDocuments(filter),
+    ]);
+
+    res.json({ contacts, pagination: paginationMeta(pagination.page, pagination.pageSize, total) });
   }),
 );
 
 contactsRouter.post(
   "/",
+  validateBody(contactBodySchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
-    const name = String(req.body.name ?? "").trim();
     const email = req.body.email ? String(req.body.email).trim().toLowerCase() : undefined;
-
-    if (!name) {
-      throw new AppError(400, "name is required");
-    }
 
     const contact = await ContactModel.create({
       workspaceId: context.workspaceId,
       ownerUserId: context.userId,
-      name,
+      name: req.body.name,
       email,
       phone: req.body.phone,
       company: req.body.company,
@@ -82,6 +118,7 @@ contactsRouter.get(
 
 contactsRouter.patch(
   "/:id",
+  validateBody(contactPatchSchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
     const contact = await ContactModel.findOneAndUpdate(
@@ -90,6 +127,7 @@ contactsRouter.patch(
         ...req.body,
         workspaceId: context.workspaceId,
         ownerUserId: context.userId,
+        ...(req.body.email ? { email: String(req.body.email).trim().toLowerCase() } : {}),
         lastActivityAt: new Date(),
       },
       { new: true },
