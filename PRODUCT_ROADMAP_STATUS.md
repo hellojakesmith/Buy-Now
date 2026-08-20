@@ -39,9 +39,9 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 - [ ] Rate limiting.
 - [ ] CSRF protection where applicable.
 - [ ] Permission-change audit logging.
-- [ ] Frontend migration from bootstrap/header identity to session auth.
+- [x] Frontend migration from bootstrap/header identity to session auth.
 
-> **Important:** The backend authentication foundation is implemented, but EPIC 1 is intentionally **not production-complete** until frontend migration, authorization/RBAC, tenant-isolation audit, rate limiting, and other security controls are verified.
+> **Important:** The backend authentication foundation and frontend session migration are implemented, but EPIC 1 is intentionally **not production-complete** until authorization/RBAC, tenant-isolation verification, rate limiting, password recovery/identity requirements, and security testing are completed.
 
 ## EPIC 2 — API Contracts, Validation & Backend Hardening
 
@@ -97,8 +97,9 @@ The exact item key remains resource-specific (`contacts`, `opportunities`, `prod
 - [ ] Add global error boundary.
 - [ ] Standardize loading/empty/error/success states.
 - [ ] Verify mobile keyboard/safe-area behavior.
-- [ ] Migrate API client to cookie-based authenticated sessions.
-- [ ] Add login/register/logout UI.
+- [x] Migrate API client to cookie-based authenticated sessions.
+- [x] Add login/register UI.
+- [ ] Add accessible logout action to the authenticated application shell.
 
 ## EPIC 4+ — Product Features
 
@@ -135,10 +136,15 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 - Protected private API route groups behind authentication in production.
 - Disabled prototype `/auth/bootstrap` authentication in production.
 - Kept public forms/pages and health endpoints accessible without authentication.
+- Added an authenticated frontend gate that restores sessions through `/auth/me`.
+- Added frontend login and workspace registration flows.
+- Migrated frontend API requests to credentialed cookie sessions.
+- Removed client-supplied identity headers from frontend API requests.
+- Removed the frontend dependency on `/auth/bootstrap`.
 
 ### Remaining before EPIC 1 can close
 
-- Migrate the frontend to `/auth/register`, `/auth/login`, `/auth/logout`, and `/auth/me`.
+- Add accessible logout action to the authenticated application shell.
 - Add password reset or external production identity provider.
 - Complete workspace membership/RBAC authorization.
 - Audit tenant isolation across every private route.
@@ -155,4 +161,4 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 
 ## Next Implementation Target
 
-**EPIC 3 + EPIC 1 frontend migration:** connect the existing frontend to the new session-based authentication contract, remove hard-coded/header identity from production API calls, and then proceed into the Forms → CRM product sequence.
+**EPIC 1 security completion + EPIC 3 shell hardening:** add the authenticated logout action, then complete RBAC/tenant isolation/security controls before expanding the Forms → CRM product sequence.
