@@ -8,6 +8,14 @@ export type TemplateMediaAsset = {
 
 /** Curated starter imagery for templates. Assets are replaceable through the editor/media system. */
 export const TEMPLATE_MEDIA: Record<string, TemplateMediaAsset[]> = {
+  'fitness-coach': [
+    { id: 'fitness-coach-hero', kind: 'hero', url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85', alt: 'Fitness coach training client in a modern gym', credit: 'Unsplash' },
+    { id: 'fitness-coach-bg', kind: 'background', url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1800&q=85', alt: 'Strength training workout in a gym', credit: 'Unsplash' },
+    { id: 'fitness-before', kind: 'testimonial', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=85', alt: 'Fitness transformation testimonial before photo placeholder', credit: 'Unsplash' },
+    { id: 'fitness-after', kind: 'testimonial', url: 'https://images.unsplash.com/photo-1550259979-ed79b48d2a30?auto=format&fit=crop&w=900&q=85', alt: 'Fitness transformation testimonial after photo placeholder', credit: 'Unsplash' },
+    { id: 'fitness-proof-2-before', kind: 'testimonial', url: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=85', alt: 'Second fitness transformation before photo placeholder', credit: 'Unsplash' },
+    { id: 'fitness-proof-2-after', kind: 'testimonial', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85', alt: 'Second fitness transformation after photo placeholder', credit: 'Unsplash' },
+  ],
   'creator-brand': [
     { id: 'creator-hero', kind: 'hero', url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1600&q=85', alt: 'Creator portrait in natural light', credit: 'Unsplash' },
     { id: 'creator-bg', kind: 'background', url: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=85', alt: 'Bright creative workspace', credit: 'Unsplash' },
