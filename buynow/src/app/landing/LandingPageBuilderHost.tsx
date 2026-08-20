@@ -73,6 +73,7 @@ export default function LandingPageBuilderHost() {
   const [error, setError] = useState<string | null>(null);
   const [showAI, setShowAI] = useState(false);
   const [aiProvider, setAiProvider] = useState<AIBuildResponse["provider"] | null>(null);
+  const [editorVersion, setEditorVersion] = useState(0);
 
   useEffect(() => {
     async function openBuilder(detail: LandingPageCreatedDetail) {
@@ -82,7 +83,7 @@ export default function LandingPageBuilderHost() {
         const response = await apiRequest<{ page: CreatedPage }>(`/pages/${detail.page._id}`);
         const initialDocument = buildInitialDocument(response.page);
         if (!response.page.builderDocument) await apiRequest(`/pages/${response.page._id}`, { method: "PATCH", body: JSON.stringify({ builderVersion: 1, builderDocument: initialDocument }) });
-        setPage(response.page); setDocument(initialDocument); setShowAI(true);
+        setPage(response.page); setDocument(initialDocument); setShowAI(true); setAiProvider(null); setEditorVersion((value) => value + 1);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unable to open the landing page editor");
       } finally { setLoading(false); }
@@ -99,9 +100,9 @@ export default function LandingPageBuilderHost() {
 
   const previewWidth = device === "mobile" ? "w-[390px]" : device === "tablet" ? "w-[768px] max-w-full" : "w-full max-w-[1180px]";
   return <div className="fixed inset-0 z-[100] bg-white">
-    <LandingPageBuilderStudio pageId={page._id} initialDocument={document} onBack={() => { setPage(null); setDocument(null); setPreviewDocument(null); setShowAI(false); }} onPreview={setPreviewDocument} />
-    {showAI && <AIBuildSheet initialTemplate={document.metadata.templateKey} onClose={() => setShowAI(false)} onApply={(nextDocument, provider) => { setDocument(nextDocument); setAiProvider(provider); setShowAI(false); }} />}
-    {!showAI && aiProvider && <button type="button" onClick={() => setShowAI(true)} className="fixed bottom-[88px] right-4 z-[160] flex items-center gap-2 rounded-full bg-[#111111] px-4 py-3 text-[12px] font-black text-white shadow-xl"><Sparkles size={15} /> Build with AI</button>}
+    <LandingPageBuilderStudio key={`${page._id}-${editorVersion}`} pageId={page._id} initialDocument={document} onBack={() => { setPage(null); setDocument(null); setPreviewDocument(null); setShowAI(false); setAiProvider(null); }} onPreview={setPreviewDocument} />
+    {showAI && <AIBuildSheet initialTemplate={document.metadata.templateKey} onClose={() => setShowAI(false)} onApply={(nextDocument, provider) => { setDocument(nextDocument); setAiProvider(provider); setEditorVersion((value) => value + 1); setShowAI(false); }} />}
+    {!showAI && <button type="button" onClick={() => setShowAI(true)} className="fixed bottom-[88px] right-4 z-[160] flex items-center gap-2 rounded-full bg-[#111111] px-4 py-3 text-[12px] font-black text-white shadow-xl"><Sparkles size={15} /> Build with AI</button>}
     {previewDocument && <div className="fixed inset-0 z-[200] flex flex-col bg-[#111111]/70 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Landing page preview"><header className="mx-auto flex w-full max-w-[1180px] shrink-0 items-center justify-between rounded-t-2xl bg-white px-4 py-3 shadow-sm"><div><div className="text-[15px] font-black">Preview</div><div className="text-[11px] text-[#9CA3AF]">{page.name} · current edits</div></div><div className="flex items-center gap-1 rounded-xl bg-[#F7F8FC] p-1">{([['mobile', Smartphone], ['tablet', Tablet], ['desktop', Monitor]] as const).map(([key, Icon]) => <button key={key} type="button" onClick={() => setDevice(key)} className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-[11px] font-bold ${device === key ? "bg-white text-[#111111] shadow-sm" : "text-[#6B7280]"}`}><Icon size={14} />{key[0].toUpperCase() + key.slice(1)}</button>)}<button type="button" onClick={() => setPreviewDocument(null)} className="ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-white" aria-label="Close preview"><X size={17} /></button></div></header><div className="min-h-0 flex-1 overflow-auto bg-[#ECEEF3] p-3 sm:p-8"><div className={`mx-auto min-h-full overflow-hidden bg-white shadow-xl transition-all ${previewWidth}`}><LandingPageRenderer document={previewDocument} interactive /></div></div><footer className="mx-auto w-full max-w-[1180px] shrink-0 rounded-b-2xl border-t border-[#EEF0F5] bg-white px-4 py-2.5 text-center text-[11px] font-semibold text-[#6B7280]">Live preview · unsaved changes included · switch devices to check responsive presentation</footer></div>}
   </div>;
 }
