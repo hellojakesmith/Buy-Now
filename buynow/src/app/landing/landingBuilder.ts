@@ -1,8 +1,8 @@
 import type { LandingPageDocument } from "./LandingPageRenderer";
+import { getTemplateMedia } from "./templateMedia";
 
 type TemplateKey = "creator-brand" | "coach" | "service-business" | "agency" | "local-business" | "lead-magnet" | "waitlist" | "product-offer";
 type TemplateConfig = { headline: string; body: string; cta: string; primary: string; primaryText: string; surface: string; text: string; muted: string; benefit: string; proof: string; faq: string };
-
 const templates: Record<TemplateKey, TemplateConfig> = {
   "creator-brand": { headline: "Build a brand people remember", body: "Share what you do, who you help, and the next step in one polished mobile experience.", cta: "Get started", primary: "#7448F6", primaryText: "#FFFFFF", surface: "#FCFAFF", text: "#17121F", muted: "#746B7D", benefit: "Turn your audience into a brand community with a clear story and memorable offer.", proof: "The page made our offer feel instantly more professional.", faq: "Can I customize this page?" },
   coach: { headline: "Make your next transformation easier to say yes to", body: "Explain the outcome, build trust, and give visitors one clear next action.", cta: "Book a consultation", primary: "#0F766E", primaryText: "#FFFFFF", surface: "#F6FFFD", text: "#10201E", muted: "#5F716D", benefit: "Show the transformation, your method, and exactly what clients get when they work with you.", proof: "I knew exactly what the program would help me accomplish.", faq: "How does coaching work?" },
@@ -16,23 +16,17 @@ const templates: Record<TemplateKey, TemplateConfig> = {
 
 export function createLandingPageDocument(templateKey: TemplateKey = "creator-brand"): LandingPageDocument {
   const config = templates[templateKey];
+  const hero = getTemplateMedia(templateKey).find((asset) => asset.kind === "hero");
   return {
     schemaVersion: 1,
     sections: [
-      { id: "hero-1", type: "hero", visible: true, blocks: [{ type: "text", text: config.headline }, { type: "text", text: config.body }, { type: "button", label: config.cta, action: { type: "url", url: "https://example.com" } }], settings: { variant: templateKey } },
+      { id: "hero-1", type: "hero", visible: true, blocks: [{ type: "image", assetId: hero?.id ?? "", alt: hero?.alt ?? "Template hero image" }, { type: "text", text: config.headline }, { type: "text", text: config.body }, { type: "button", label: config.cta, action: { type: "url", url: "https://example.com" } }], settings: { variant: templateKey, starterMedia: hero?.id ?? null } },
       { id: "benefits-1", type: "benefits", visible: true, blocks: [{ type: "text", text: config.benefit }], settings: { variant: templateKey } },
       { id: "social-proof-1", type: "social-proof", visible: true, blocks: [{ type: "testimonial", quote: config.proof, author: "Happy customer" }], settings: { variant: templateKey } },
       { id: "faq-1", type: "faq", visible: true, blocks: [{ type: "faq", question: config.faq, answer: "Customize this answer in the mobile editor so visitors get a clear, honest response." }], settings: { variant: templateKey } },
       { id: "cta-1", type: "cta", visible: true, blocks: [{ type: "button", label: config.cta, action: { type: "url", url: "https://example.com" } }], settings: { variant: templateKey } },
     ],
-    theme: {
-      colors: { primary: config.primary, primaryText: config.primaryText, surface: config.surface, text: config.text, muted: config.muted },
-      typography: { fontFamily: "Inter, system-ui, sans-serif" },
-      buttons: { size: "large" },
-      spacing: { section: 32 },
-      radius: { button: 14, card: 18 },
-    },
-    references: [],
-    metadata: { templateKey, aiGenerated: false },
+    theme: { colors: { primary: config.primary, primaryText: config.primaryText, surface: config.surface, text: config.text, muted: config.muted }, typography: { fontFamily: "Inter, system-ui, sans-serif" }, buttons: { size: "large" }, spacing: { section: 32 }, radius: { button: 14, card: 18 } },
+    references: [], metadata: { templateKey, aiGenerated: false },
   };
 }
