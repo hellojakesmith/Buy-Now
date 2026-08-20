@@ -14,11 +14,28 @@ const requestSchema = z.object({
 
 const SYSTEM_PROMPT = `You are Buy Now's landing-page strategist. Generate a complete mobile-first landing page as JSON for a small business, creator, coach, consultant, or local business. The page must be conversion-focused, concise, professional, and easy to scan on a phone. Use only the allowed builder schema. Do not invent real metrics, customer names, URLs, prices, or credentials. If the user did not provide a real URL, use https://example.com as a placeholder. Prefer sections in this order when appropriate: hero, benefits/content, social-proof, offer, faq, form or cta, footer. Return JSON only with schemaVersion 1, sections, theme, references, and metadata. Each section id must be unique. Each section may contain text, image, button, form, product, testimonial, or faq blocks. For buttons without a real destination use https://example.com. Set metadata.aiGenerated=true and metadata.aiPromptVersion='ai-landing-v1'.`;
 
+function starterHeroAsset(templateKey?: string) {
+  const assets: Record<string, { id: string; alt: string }> = {
+    "fitness-coach": { id: "fitness-hero", alt: "Athlete training with weights in a gym" },
+    coach: { id: "coach-hero", alt: "Fitness training studio" },
+    "creator-brand": { id: "creator-hero", alt: "Creator portrait in natural light" },
+    agency: { id: "agency-hero", alt: "Modern agency workspace" },
+    "service-business": { id: "service-hero", alt: "Professional team collaborating" },
+    "local-business": { id: "local-hero", alt: "Welcoming retail storefront" },
+    "lead-magnet": { id: "magnet-hero", alt: "Notebook and laptop workspace" },
+    waitlist: { id: "waitlist-hero", alt: "Creative product design workspace" },
+    "product-offer": { id: "product-hero", alt: "Minimal premium product photograph" },
+  };
+  return assets[templateKey ?? "creator-brand"] ?? assets["creator-brand"];
+}
+
 function fallbackDocument(prompt: string, templateKey?: string): ConversionBuilderDocument {
   const lower = prompt.toLowerCase();
   const fitness = /fitness|trainer|workout|weight loss|gym|body|nutrition|coaching/.test(lower);
   const coach = /coach|coaching|consultant|consulting/.test(lower);
   const sell = /sell|product|program|course|offer|buy/.test(lower);
+  const selectedTemplate = templateKey ?? (fitness ? "fitness-coach" : coach ? "coach" : sell ? "product-offer" : "creator-brand");
+  const heroAsset = starterHeroAsset(selectedTemplate);
   const title = fitness
     ? "Build the body and confidence you've been working for"
     : coach
@@ -38,10 +55,11 @@ function fallbackDocument(prompt: string, templateKey?: string): ConversionBuild
     schemaVersion: 1,
     sections: [
       { id: "ai-hero", type: "hero", visible: true, blocks: [
+        { type: "image", assetId: heroAsset.id, alt: heroAsset.alt },
         { type: "text", text: title },
         { type: "text", text: subtitle },
         { type: "button", label: cta, action: { type: "url", url: "https://example.com" } },
-      ], settings: { variant: templateKey ?? (fitness ? "fitness-coach" : coach ? "coach" : sell ? "product-offer" : "creator-brand") } },
+      ], settings: { variant: selectedTemplate } },
       { id: "ai-benefits", type: "benefits", visible: true, blocks: [
         { type: "text", text: fitness ? "Training that fits your schedule" : "A clear process with less friction" },
         { type: "text", text: fitness ? "Nutrition guidance you can actually follow" : "Practical guidance focused on outcomes" },
@@ -52,7 +70,7 @@ function fallbackDocument(prompt: string, templateKey?: string): ConversionBuild
       { id: "ai-cta", type: "cta", visible: true, blocks: [{ type: "text", text: "Ready to take the next step?" }, { type: "button", label: cta, action: { type: "url", url: "https://example.com" } }], settings: {} },
     ],
     theme: { colors: { primary: fitness ? "#E11D48" : "#0325D9", primaryText: "#FFFFFF", surface: "#FFFFFF", text: "#111111", muted: "#6B7280" }, typography: { fontFamily: "Inter, system-ui, sans-serif" }, buttons: { size: "large" }, spacing: { section: 32 }, radius: { button: 16, card: 20 } },
-    references: [], metadata: { templateKey: templateKey ?? (fitness ? "fitness-coach" : undefined), aiGenerated: true, aiPromptVersion: "fallback-v1" },
+    references: [], metadata: { templateKey: selectedTemplate, aiGenerated: true, aiPromptVersion: "fallback-v1" },
   });
 }
 
