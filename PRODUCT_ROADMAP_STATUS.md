@@ -46,19 +46,47 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 
 - [x] Add reusable Zod request-body validation middleware.
 - [x] Apply schema validation to auth bootstrap input.
-- [ ] Add request schemas for every POST/PATCH endpoint.
-- [ ] Validate ObjectIds across all routes.
+- [x] Add request validation to contacts, opportunities, products, forms, pages, pipelines, and orders.
+- [ ] Add request schemas for every remaining POST/PATCH endpoint.
+- [ ] Validate ObjectIds across all remaining routes.
 - [ ] Validate enums/state transitions across all routes.
-- [ ] Validate URLs/slugs/prices/currency across all routes.
+- [x] Validate email/URL/slug/price/currency inputs on the core CRM/content/commerce routes.
 - [ ] Validate page section schemas.
 - [ ] Validate form field schemas.
-- [ ] Validate pagination/sorting/filter parameters.
+- [x] Validate pagination parameters on all currently paginated resource lists.
+- [ ] Validate sorting parameters across all list endpoints.
 - [ ] Standardize API error responses.
 - [ ] Add request IDs/correlation IDs.
 - [ ] Add structured server logging.
+- [ ] Add safe production error handling.
 - [ ] Add database indexes for high-volume queries.
 - [ ] Add pagination to all growing collections.
-- [ ] Add search/filter support to contacts, opportunities, orders, products, pages, and forms.
+- [x] Add search/filter support to contacts.
+- [x] Add search/filter support to opportunities.
+- [x] Add search/filter support to orders.
+- [x] Add search/filter support to products/pages/forms.
+- [ ] Add consistent created/updated timestamps.
+- [ ] Add optimistic concurrency/version strategy where needed.
+
+### Pagination contract
+
+Paginated resource endpoints now return:
+
+```json
+{
+  "items": [],
+  "pagination": {
+    "page": 1,
+    "pageSize": 25,
+    "total": 0,
+    "totalPages": 0,
+    "hasNextPage": false,
+    "hasPreviousPage": false
+  }
+}
+```
+
+The exact item key remains resource-specific (`contacts`, `opportunities`, `products`, `forms`, `pages`, `pipelines`, or `orders`). Page size is bounded to 100.
 
 ## EPIC 3 — Frontend Architecture & App Shell
 
@@ -71,7 +99,7 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 
 ## EPIC 4+ — Product Features
 
-No feature in EPIC 4 or later is being marked complete by this foundation pass. Implementation will proceed in dependency order:
+No feature in EPIC 4 or later is being marked complete by the API hardening pass. Implementation will proceed in dependency order:
 
 `Forms → CRM → Pipeline → Creator Brand → Media → Commerce → Analytics → Automation → Notifications → AI → Integrations → Launch`
 
@@ -85,6 +113,27 @@ No feature in EPIC 4 or later is being marked complete by this foundation pass. 
 - [ ] Add uptime monitoring.
 - [ ] Add database backup/restore verification.
 
+## Current Implementation Pass
+
+### Completed
+
+- Added reusable bounded pagination utilities.
+- Added pagination metadata and maximum page-size enforcement.
+- Added list filtering for contacts, opportunities, products, forms, pages, and orders.
+- Added pipeline list pagination.
+- Added Zod validation to core CRM/content/commerce create/update endpoints.
+- Added ObjectId conversion/validation at key relationship boundaries.
+- Escaped user-provided contact/product/page/form search strings before constructing MongoDB regular expressions.
+- Kept all implemented queries explicitly scoped to the current workspace context.
+
+### Remaining before EPIC 2 can close
+
+- Validate remaining routes such as activity, media, notifications, and dashboard inputs.
+- Add validation for page section and form-field domain schemas rather than generic arrays.
+- Complete pagination for every growing collection.
+- Add standardized API errors, request IDs, structured logging, and production-safe error handling.
+- Add/verify database indexes based on actual query patterns.
+
 ## Next Implementation Target
 
-**EPIC 2:** expand validation to every mutating endpoint, then implement tenant authorization before adding new customer-facing functionality.
+**EPIC 1:** replace prototype `/auth/bootstrap` identity with real authenticated sessions and enforce workspace authorization at the middleware boundary before expanding customer-facing functionality.

@@ -1,9 +1,42 @@
 import { Router } from "express";
+import { z } from "zod";
 import { FormModel } from "../models/Form.js";
 import { asyncRoute, AppError, parseObjectId, requireContext, normalizeSlug } from "../utils/http.js";
 import { processFormSubmission } from "../services/forms.js";
+import { validateBody, validateQuery } from "../middleware/validate.js";
+import { getPagination, getPaginationSkip, paginationMeta } from "../utils/pagination.js";
 
 export const formsRouter = Router();
+
+const formListQuerySchema = z.object({
+  status: z.string().trim().max(50).optional(),
+  q: z.string().trim().max(100).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(25),
+});
+
+const formBodySchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  slug: z.string().trim().max(200).optional(),
+  description: z.string().max(5000).optional(),
+  fields: z.array(z.unknown()).max(100).optional(),
+  submitAction: z.record(z.unknown()).optional(),
+  publishSettings: z.record(z.unknown()).optional(),
+  status: z.string().trim().max(50).optional(),
+});
+
+const formPatchSchema = formBodySchema.partial();
+
+const publishFormSchema = z.object({
+  publishSettings: z.record(z.unknown()).optional(),
+});
+
+const submissionSchema = z.object({
+  answers: z.record(z.unknown()).optional(),
+  sourceUrl: z.string().url().max(2000).optional(),
+  metadata: z.record(z.unknown()).optional(),
+  createOpportunity: z.boolean().optional(),
+}).passthrough();
 
 async function generateUniqueSlug(workspaceId: string, candidate: string, excludeFormId?: string) {
   const base = normalizeSlug(candidate) || "form";
@@ -30,26 +63,38 @@ function buildPublicFormPath(slug: string) {
 
 formsRouter.get(
   "/",
+  validateQuery(formListQuerySchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
-    const forms = await FormModel.find({ workspaceId: context.workspaceId }).sort({ createdAt: -1 }).lean();
-    res.json({ forms });
+    const { status, q, page, pageSize } = req.query as z.infer<typeof formListQuerySchema>;
+    const pagination = getPagination({ page, pageSize });
+    const filter: Record<string, unknown> = { workspaceId: context.workspaceId };
+    if (status) filter.status = status;
+    if (q) filter.$or = [{ name: new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") }];
+
+    const [forms, total] = await Promise.all([
+      FormModel.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(getPaginationSkip(pagination))
+        .limit(pagination.pageSize)
+        .lean(),
+      FormModel.countDocuments(filter),
+    ]);
+    res.json({ forms, pagination: paginationMeta(pagination.page, pagination.pageSize, total) });
   }),
 );
 
 formsRouter.post(
   "/",
+  validateBody(formBodySchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
-    const name = String(req.body.name ?? "").trim();
-    if (!name) throw new AppError(400, "name is required");
-
-    const slug = await generateUniqueSlug(context.workspaceId, String(req.body.slug ?? name));
+    const slug = await generateUniqueSlug(context.workspaceId, String(req.body.slug ?? req.body.name));
 
     const form = await FormModel.create({
       workspaceId: context.workspaceId,
       ownerUserId: context.userId,
-      name,
+      name: req.body.name,
       slug,
       description: req.body.description,
       fields: req.body.fields ?? [],
@@ -77,6 +122,7 @@ formsRouter.get(
 
 formsRouter.patch(
   "/:id",
+  validateBody(formPatchSchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
     const formId = String(req.params.id);
@@ -106,6 +152,7 @@ formsRouter.patch(
 
 formsRouter.post(
   "/:id/publish",
+  validateBody(publishFormSchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
     const formId = parseObjectId(String(req.params.id), "form id");
@@ -146,6 +193,7 @@ formsRouter.delete(
 
 formsRouter.post(
   "/:id/submissions",
+  validateBody(submissionSchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
     const result = await processFormSubmission({
