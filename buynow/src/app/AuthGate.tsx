@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import App from "./App";
 import { authRequest, contextFromAuth, getCurrentAuth, logout, saveStoredContext, type AuthResponse } from "./lib/api";
+import PublicForm, { publicFormSlugFromPath } from "./forms/PublicForm";
 
 type Mode = "login" | "register" | "forgot" | "reset";
 
@@ -9,8 +10,9 @@ function slugify(value: string) {
 }
 
 export default function AuthGate() {
+  const publicSlug = publicFormSlugFromPath();
   const [auth, setAuth] = useState<AuthResponse | null>(null);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(!publicSlug);
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
@@ -23,6 +25,7 @@ export default function AuthGate() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (publicSlug) return;
     let cancelled = false;
     void getCurrentAuth()
       .then((current) => {
@@ -39,11 +42,13 @@ export default function AuthGate() {
         if (!cancelled) setChecking(false);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [publicSlug]);
 
   useEffect(() => {
     if (mode === "register" && workspaceName && !workspaceSlug) setWorkspaceSlug(slugify(workspaceName));
   }, [mode, workspaceName, workspaceSlug]);
+
+  if (publicSlug) return <PublicForm slug={publicSlug} />;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

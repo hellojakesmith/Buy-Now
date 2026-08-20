@@ -6,13 +6,18 @@ import { createNotification } from "./notifications.js";
 import { ensureDefaultPipeline } from "./seed.js";
 import { upsertContactFromSubmission } from "./contacts.js";
 import { AppError } from "../utils/http.js";
+import { validateFormAnswers } from "../schemas/forms.js";
 
-function flattenAnswers(input: unknown): Record<string, unknown> {
-  if (input && typeof input === "object" && !Array.isArray(input)) {
-    return input as Record<string, unknown>;
-  }
+const DUPLICATE_WINDOW_MS = 1000 * 60 * 60 * 24;
 
-  return {};
+export function publicFormView(form: { name: string; slug: string; description?: string | null; successMessage?: string | null; fields?: unknown[]; publishSettings?: unknown; stats?: unknown }) {
+  return {
+    name: form.name,
+    slug: form.slug,
+    description: form.description ?? "",
+    successMessage: form.successMessage ?? "Thanks — we received your details.",
+    fields: form.fields ?? [],
+  };
 }
 
 export async function processFormSubmission(input: {
@@ -33,37 +38,60 @@ export async function processFormSubmission(input: {
     throw new AppError(404, "Form not found");
   }
 
-  const answers = flattenAnswers(input.answers);
-  const contact = await upsertContactFromSubmission({
-    workspaceId: input.workspaceId,
-    ownerUserId: input.ownerUserId,
-    source: form.name,
-    answers,
-  });
+  const answers = validateFormAnswers(form.fields ?? [], input.answers);
+  const email = typeof answers.email === "string" ? answers.email : undefined;
+
+  if (email) {
+    const recent = await FormSubmissionModel.findOne({
+      formId: form._id,
+      email,
+      submittedAt: { $gte: new Date(Date.now() - DUPLICATE_WINDOW_MS) },
+    }).sort({ submittedAt: -1 });
+
+    if (recent) {
+      await FormModel.updateOne({ _id: form._id }, { $inc: { "stats.submissions": 1 } });
+      return { form, submission: recent, contact: null, opportunity: null, duplicate: true };
+    }
+  }
+
+  const shouldCreateContact = form.submitAction?.createContact !== false;
+  const contact = shouldCreateContact
+    ? await upsertContactFromSubmission({
+        workspaceId: input.workspaceId,
+        ownerUserId: input.ownerUserId,
+        source: form.name,
+        answers,
+      })
+    : null;
 
   const submission = await FormSubmissionModel.create({
     workspaceId: input.workspaceId,
     formId: form._id,
-    contactId: contact._id,
+    contactId: contact?._id,
+    email,
     sourceUrl: input.sourceUrl,
     answers,
     metadata: input.metadata ?? {},
     status: "processed",
   });
 
-  await createActivity({
-    workspaceId: input.workspaceId,
-    actorUserId: input.ownerUserId,
-    contactId: String(contact._id),
-    type: "submission",
-    title: "Form submitted",
-    body: `${contact.name} submitted ${form.name}`,
-    payload: { submissionId: String(submission._id), formId: String(form._id) },
-  });
+  await FormModel.updateOne({ _id: form._id }, { $inc: { "stats.submissions": 1 } });
+
+  if (contact) {
+    await createActivity({
+      workspaceId: input.workspaceId,
+      actorUserId: input.ownerUserId,
+      contactId: String(contact._id),
+      type: "submission",
+      title: "Form submitted",
+      body: `${contact.name} submitted ${form.name}`,
+      payload: { submissionId: String(submission._id), formId: String(form._id) },
+    });
+  }
 
   let opportunity = null;
   const shouldCreateOpportunity = input.createOpportunity ?? form.submitAction?.createOpportunity;
-  if (shouldCreateOpportunity) {
+  if (shouldCreateOpportunity && contact) {
     const pipeline = await ensureDefaultPipeline(input.workspaceId, input.ownerUserId);
     const stageKey = form.submitAction?.pipelineStage ?? "new";
     opportunity = await OpportunityModel.create({
@@ -96,10 +124,10 @@ export async function processFormSubmission(input: {
     userId: input.ownerUserId,
     type: "form-submission",
     title: "New form submission",
-    body: `${contact.name} submitted ${form.name}`,
+    body: `${contact?.name ?? "Someone"} submitted ${form.name}`,
     link: `/forms/${form._id}`,
-    payload: { formId: String(form._id), contactId: String(contact._id) },
+    payload: { formId: String(form._id), contactId: contact ? String(contact._id) : undefined },
   });
 
-  return { form, submission, contact, opportunity };
+  return { form, submission, contact, opportunity, duplicate: false };
 }

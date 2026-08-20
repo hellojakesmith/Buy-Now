@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest, bootstrapContext, loadStoredContext, saveStoredContext, type AppContext } from "./api";
+import { apiRequest, contextFromAuth, getCurrentAuth, loadStoredContext, saveStoredContext, type AppContext } from "./api";
 
 type BackendContact = {
   _id: string;
@@ -96,8 +96,9 @@ export type BackendForm = {
   name: string;
   slug: string;
   description?: string;
+  successMessage?: string;
   status?: string;
-  fields?: Array<{ key: string; label: string; type: string; required?: boolean; options?: string[]; placeholder?: string }>;
+  fields?: Array<{ key: string; label: string; type: string; required?: boolean; options?: string[]; placeholder?: string; helpText?: string; order?: number }>;
   submitAction?: { createContact?: boolean; createOpportunity?: boolean; pipelineStage?: string };
   publishSettings?: { path?: string };
   stats?: { views?: number; starts?: number; submissions?: number };
@@ -312,13 +313,14 @@ export function useAppData() {
   });
 
   async function ensureContext() {
-    let active = context;
+    let active = context ?? loadStoredContext();
     if (!active) {
-      const bootstrap = await bootstrapContext();
-      active = bootstrap.context;
-      setContext(active);
+      const current = await getCurrentAuth();
+      if (!current) throw new Error("Please sign in to continue");
+      active = contextFromAuth(current);
       saveStoredContext(active);
     }
+    setContext(active);
     return active;
   }
 
@@ -521,6 +523,12 @@ export function useAppData() {
     return result.form;
   }
 
+  async function unpublishForm(formId: string) {
+    const result = await apiRequest<{ form: BackendForm }>(`/forms/${formId}/unpublish`, { method: "POST" }, context);
+    await refresh();
+    return result.form;
+  }
+
   async function createProduct(input: {
     name: string;
     slug?: string;
@@ -581,6 +589,7 @@ export function useAppData() {
     createForm,
     updateForm,
     publishForm,
+    unpublishForm,
     createProduct,
     createPage,
     markNotificationRead,

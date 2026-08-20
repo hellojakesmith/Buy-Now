@@ -5,7 +5,7 @@ const FormFieldSchema = new Schema(
   {
     key: { type: String, required: true, trim: true },
     label: { type: String, required: true, trim: true },
-    type: { type: String, required: true },
+    type: { type: String, required: true, enum: ["text", "email", "phone", "textarea", "select", "checkbox", "date"] },
     required: { type: Boolean, default: false },
     options: [{ type: String }],
     placeholder: { type: String },
@@ -23,6 +23,7 @@ const FormSchema = new Schema(
     slug: { type: String, required: true, trim: true, lowercase: true },
     status: { type: String, enum: ["draft", "published", "archived"], default: "draft" },
     description: { type: String },
+    successMessage: { type: String, default: "Thanks — we received your details." },
     fields: { type: [FormFieldSchema], default: [] },
     submitAction: {
       createContact: { type: Boolean, default: true },
@@ -44,6 +45,7 @@ const FormSchema = new Schema(
 );
 
 FormSchema.index({ workspaceId: 1, slug: 1 }, { unique: true });
+FormSchema.index({ slug: 1, status: 1 });
 
 export type Form = InferSchemaType<typeof FormSchema>;
 export const FormModel = mongoose.models.Form || model("Form", FormSchema);

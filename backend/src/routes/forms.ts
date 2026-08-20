@@ -1,42 +1,21 @@
 import { Router } from "express";
 import { z } from "zod";
 import { FormModel } from "../models/Form.js";
+import { FormSubmissionModel } from "../models/FormSubmission.js";
 import { asyncRoute, AppError, parseObjectId, requireContext, normalizeSlug } from "../utils/http.js";
 import { processFormSubmission } from "../services/forms.js";
 import { validateBody, validateQuery } from "../middleware/validate.js";
 import { getPagination, getPaginationSkip, paginationMeta } from "../utils/pagination.js";
+import { formBodySchema, formPatchSchema, publishFormSchema, publicSubmissionSchema } from "../schemas/forms.js";
 
 export const formsRouter = Router();
 
 const formListQuerySchema = z.object({
-  status: z.string().trim().max(50).optional(),
+  status: z.enum(["draft", "published", "archived"]).optional(),
   q: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });
-
-const formBodySchema = z.object({
-  name: z.string().trim().min(1).max(200),
-  slug: z.string().trim().max(200).optional(),
-  description: z.string().max(5000).optional(),
-  fields: z.array(z.unknown()).max(100).optional(),
-  submitAction: z.record(z.unknown()).optional(),
-  publishSettings: z.record(z.unknown()).optional(),
-  status: z.string().trim().max(50).optional(),
-});
-
-const formPatchSchema = formBodySchema.partial();
-
-const publishFormSchema = z.object({
-  publishSettings: z.record(z.unknown()).optional(),
-});
-
-const submissionSchema = z.object({
-  answers: z.record(z.unknown()).optional(),
-  sourceUrl: z.string().url().max(2000).optional(),
-  metadata: z.record(z.unknown()).optional(),
-  createOpportunity: z.boolean().optional(),
-}).passthrough();
 
 async function generateUniqueSlug(workspaceId: string, candidate: string, excludeFormId?: string) {
   const base = normalizeSlug(candidate) || "form";
@@ -58,7 +37,11 @@ async function generateUniqueSlug(workspaceId: string, candidate: string, exclud
 }
 
 function buildPublicFormPath(slug: string) {
-  return `/public/forms/${slug}`;
+  return `/f/${slug}`;
+}
+
+function withOrderedFields(fields: Array<{ order?: number }> | undefined) {
+  return (fields ?? []).map((field, index) => ({ ...field, order: field.order ?? index }));
 }
 
 formsRouter.get(
@@ -97,7 +80,8 @@ formsRouter.post(
       name: req.body.name,
       slug,
       description: req.body.description,
-      fields: req.body.fields ?? [],
+      successMessage: req.body.successMessage,
+      fields: withOrderedFields(req.body.fields),
       submitAction: req.body.submitAction ?? {},
       publishSettings: {
         ...(req.body.publishSettings ?? {}),
@@ -107,6 +91,28 @@ formsRouter.post(
     });
 
     res.status(201).json({ form });
+  }),
+);
+
+formsRouter.get(
+  "/:id/submissions",
+  validateQuery(z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(25),
+  })),
+  asyncRoute(async (req, res) => {
+    const context = requireContext(req);
+    const formId = parseObjectId(String(req.params.id), "form id");
+    const form = await FormModel.exists({ _id: formId, workspaceId: context.workspaceId });
+    if (!form) throw new AppError(404, "Form not found");
+    const { page, pageSize } = req.query as { page: number; pageSize: number };
+    const pagination = getPagination({ page, pageSize });
+    const filter = { workspaceId: context.workspaceId, formId };
+    const [submissions, total] = await Promise.all([
+      FormSubmissionModel.find(filter).sort({ submittedAt: -1 }).skip(getPaginationSkip(pagination)).limit(pagination.pageSize).lean(),
+      FormSubmissionModel.countDocuments(filter),
+    ]);
+    res.json({ submissions, pagination: paginationMeta(pagination.page, pagination.pageSize, total) });
   }),
 );
 
@@ -135,6 +141,7 @@ formsRouter.patch(
         ...req.body,
         workspaceId: context.workspaceId,
         ownerUserId: context.userId,
+        ...(req.body.fields ? { fields: withOrderedFields(req.body.fields) } : {}),
         ...(nextSlug ? {
           slug: nextSlug,
           publishSettings: {
@@ -157,9 +164,10 @@ formsRouter.post(
     const context = requireContext(req);
     const formId = parseObjectId(String(req.params.id), "form id");
     const existingForm = await FormModel.findOne({ _id: formId, workspaceId: context.workspaceId })
-      .select({ slug: 1 })
-      .lean<{ slug: string }>();
+      .select({ slug: 1, fields: 1 })
+      .lean<{ slug: string; fields?: unknown[] }>();
     if (!existingForm) throw new AppError(404, "Form not found");
+    if (!existingForm.fields?.length) throw new AppError(400, "Add at least one field before publishing");
 
     const form = await FormModel.findOneAndUpdate(
       { _id: formId, workspaceId: context.workspaceId },
@@ -170,6 +178,20 @@ formsRouter.post(
           path: buildPublicFormPath(existingForm.slug),
         },
       },
+      { new: true },
+    );
+    if (!form) throw new AppError(404, "Form not found");
+    res.json({ form });
+  }),
+);
+
+formsRouter.post(
+  "/:id/unpublish",
+  asyncRoute(async (req, res) => {
+    const context = requireContext(req);
+    const form = await FormModel.findOneAndUpdate(
+      { _id: parseObjectId(String(req.params.id), "form id"), workspaceId: context.workspaceId },
+      { status: "draft" },
       { new: true },
     );
     if (!form) throw new AppError(404, "Form not found");
@@ -193,7 +215,7 @@ formsRouter.delete(
 
 formsRouter.post(
   "/:id/submissions",
-  validateBody(submissionSchema),
+  validateBody(publicSubmissionSchema),
   asyncRoute(async (req, res) => {
     const context = requireContext(req);
     const result = await processFormSubmission({

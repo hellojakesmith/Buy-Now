@@ -53,7 +53,7 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 - [ ] Validate enums/state transitions across all routes.
 - [x] Validate email/URL/slug/price/currency inputs on the core CRM/content/commerce routes.
 - [ ] Validate page section schemas.
-- [ ] Validate form field schemas.
+- [x] Validate form field schemas.
 - [x] Validate pagination parameters on all currently paginated resource lists.
 - [ ] Validate sorting parameters across all list endpoints.
 - [x] Standardize API error responses.
@@ -151,6 +151,12 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 - Added hashed password-reset tokens and a frontend reset flow. Production still needs email delivery.
 - Recorded permission changes in an append-only audit log.
 - Added request IDs and a consistent `{ message, requestId, details? }` error shape.
+- Added canonical form-field schemas (`text`, `email`, `phone`, `textarea`, `select`, `checkbox`, `date`) with server-side answer validation.
+- Public form JSON no longer exposes workspace internals.
+- Public `/f/:slug` renderer captures leads without signing in.
+- Duplicate submissions (same form + email within 24 hours) reuse the existing record instead of creating extra contacts.
+- Contact upsert matches on email or phone only — not name alone.
+- Form editor can add, edit, require, and delete fields; publish, unpublish, share, preview, and embed.
 
 ### Remaining before EPIC 1 can close
 
@@ -159,11 +165,11 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 ### Remaining before EPIC 2 can close
 
 - Validate remaining routes such as activity, media, notifications, and dashboard inputs.
-- Add validation for page section and form-field domain schemas rather than generic arrays.
+- Add validation for page section schemas rather than generic arrays.
 - Complete pagination for every growing collection.
 - Add structured server logging.
 - Add/verify database indexes based on actual query patterns.
 
 ## Next Implementation Target
 
-**EPIC 4 Forms + EPIC 2 remaining validation:** production form-field schemas and the public lead-capture golden path, now that the security foundation is in place. SMTP for password reset can land in parallel.
+**EPIC 5 CRM:** contact detail, tags, source filters, and follow-up — the lead-capture golden path is now in place. SMTP for password reset can still land in parallel.

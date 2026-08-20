@@ -12,6 +12,8 @@ import {
 } from "recharts";
 import { buildApiUrl } from "./lib/api";
 import { useAppData, type LeadUI, type OpportunityUI, type ProductUI, type OrderUI, type NotificationUI, type AnalyticsPoint, type BackendForm } from "./lib/useAppData";
+import FormEditorScreen from "./forms/FormEditorScreen";
+import type { EditableForm, FormField } from "./forms/types";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Screen =
@@ -1176,93 +1178,7 @@ function FormTemplatesScreen({ goBack, onCreateDraft }: { goBack: () => void; on
   );
 }
 
-// ── Form Editor Screen ─────────────────────────────────────────────────────────
-function FormEditorScreen({
-  goBack,
-  onSave,
-  onPublish,
-  form,
-}: {
-  goBack: () => void;
-  onSave: () => Promise<void>;
-  onPublish: () => Promise<void>;
-  form: { name: string; slug: string; status?: string; fields?: Array<{ label: string; type: string; required?: boolean }> } | null;
-}) {
-  const fields = form?.fields?.map((field) => ({
-    label: field.label,
-    type: field.type,
-    required: Boolean(field.required),
-  })) ?? [
-    { label: "First Name", type: "Short Text", required: true },
-    { label: "Last Name", type: "Short Text", required: true },
-    { label: "Email", type: "Email", required: true },
-    { label: "Phone", type: "Phone", required: false },
-    { label: "What are you interested in?", type: "Multiple Choice", required: false },
-  ];
-
-  return (
-    <div className="pb-8">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEF0F5] flex-shrink-0">
-        <button onClick={goBack} className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F7F8FC]">
-          <ChevronLeft size={18} color="#111111" />
-        </button>
-        <span className="font-bold text-[16px] text-[#111111]">{form?.name ?? "New Lead Form"}</span>
-        <div className="flex gap-2">
-          <button onClick={() => void onSave()} className="px-3 py-1.5 rounded-xl text-[13px] font-semibold bg-[#F7F8FC] text-[#111111]">Save</button>
-          <button onClick={() => void onPublish()} className="px-3 py-1.5 rounded-xl text-[13px] font-semibold text-white bg-[#0325D9]">
-            Publish
-          </button>
-        </div>
-      </div>
-
-      <div className="px-4 pt-4 space-y-5">
-        <div className="p-4 rounded-[16px] bg-[#F7F8FC] border border-[#EEF0F5]">
-          <div className="text-[17px] font-bold text-[#111111] mb-0.5">{"Let's get started"}</div>
-          <div className="text-[13px] text-[#6B7280]">Tell us a little about yourself.</div>
-        </div>
-
-        <div>
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-2">Fields</div>
-          <div className="space-y-2">
-            {fields.map(({ label, type, required }) => (
-              <div key={label} className="flex items-center gap-3 p-3.5 rounded-[14px] border border-[#EEF0F5] bg-white">
-                <GripVertical size={14} color="#9CA3AF" className="flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[14px] text-[#111111] truncate">{label}</div>
-                  <div className="text-[11px] text-[#9CA3AF]">{type}{required ? " · Required" : ""}</div>
-                </div>
-                <div className="flex gap-1.5">
-                  <button className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#F7F8FC]">
-                    <Edit3 size={12} color="#6B7280" />
-                  </button>
-                  <button className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#FFF3E5]">
-                    <Trash2 size={12} color="#FF8A00" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <button className="w-full py-3.5 rounded-[14px] border-2 border-dashed border-[#0325D9] flex items-center justify-center gap-2">
-          <Plus size={16} color="#0325D9" />
-          <span className="font-semibold text-[14px] text-[#0325D9]">Add Field</span>
-        </button>
-
-        <div>
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-2">Field Types</div>
-          <div className="grid grid-cols-3 gap-2">
-            {["Short Text", "Email", "Phone", "Number", "Dropdown", "Checkboxes"].map((ft) => (
-              <button key={ft} className="py-2.5 px-2 rounded-xl text-[11px] font-semibold text-center bg-[#F7F8FC] text-[#6B7280] border border-[#EEF0F5]">
-                {ft}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+// ── Form Editor lives in ./forms/FormEditorScreen ──────────────────────────────
 
 // ── Form Published Screen ──────────────────────────────────────────────────────
 function FormPublishedScreen({ goBack, shareUrl }: { goBack: () => void; shareUrl: string }) {
@@ -1299,9 +1215,9 @@ function FormPublishedScreen({ goBack, shareUrl }: { goBack: () => void; shareUr
         <div className="w-full grid grid-cols-2 gap-3">
           {[
             { Icon: Copy, label: copied ? "Copied" : "Copy Link", color: "#0325D9", bg: "#E9EDFF", onClick: copyShareUrl },
-            { Icon: Share2, label: "Share", color: "#7448F6", bg: "#EEE9FF" },
-            { Icon: Eye, label: "Preview", color: "#16B879", bg: "#E8F8F1" },
-            { Icon: Edit3, label: "Edit Form", color: "#FF8A00", bg: "#FFF3E5" },
+            { Icon: Share2, label: "Share", color: "#7448F6", bg: "#EEE9FF", onClick: copyShareUrl },
+            { Icon: Eye, label: "Preview", color: "#16B879", bg: "#E8F8F1", onClick: () => { if (shareUrl) window.open(shareUrl, "_blank", "noopener"); } },
+            { Icon: Edit3, label: "Edit Form", color: "#FF8A00", bg: "#FFF3E5", onClick: goBack },
           ].map(({ Icon, label, color, bg, onClick }) => (
             <button key={label} onClick={onClick} className="flex items-center gap-2.5 p-3.5 rounded-[14px]" style={{ background: bg }}>
               <Icon size={16} color={color} />
@@ -1309,6 +1225,13 @@ function FormPublishedScreen({ goBack, shareUrl }: { goBack: () => void; shareUr
             </button>
           ))}
         </div>
+
+        {shareUrl && (
+          <div className="w-full p-4 rounded-[16px] bg-white border border-[#EEF0F5] text-left">
+            <div className="text-[11px] font-semibold text-[#9CA3AF] mb-1">Embed snippet</div>
+            <code className="block break-all text-[12px] text-[#111111]">{`<iframe src="${shareUrl}" title="Lead form" style="width:100%;min-height:640px;border:0;"></iframe>`}</code>
+          </div>
+        )}
 
         <div className="w-full p-4 rounded-[16px] border border-[#EEF0F5] bg-white">
           <div className="text-[14px] font-bold text-[#111111] mb-3">QR Code</div>
@@ -1678,7 +1601,7 @@ export default function App({ onLogout }: { onLogout?: () => Promise<void> | voi
   const [showCreate, setShowCreate] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadUI | null>(null);
   const [selectedOpp, setSelectedOpp] = useState<OpportunityUI | null>(null);
-  const [selectedForm, setSelectedForm] = useState<{ _id: string; name: string; slug: string; fields?: Array<{ label: string; type: string; required?: boolean }>; publishSettings?: { path?: string } } | null>(null);
+  const [selectedForm, setSelectedForm] = useState<EditableForm | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<{ name: string; price: number; description?: string } | null>(null);
   const [pipelineStage, setPipelineStage] = useState(0);
   const [filterTab, setFilterTab] = useState("All");
@@ -1712,31 +1635,53 @@ export default function App({ onLogout }: { onLogout?: () => Promise<void> | voi
     _id: data.forms[0]._id,
     name: data.forms[0].name,
     slug: data.forms[0].slug,
-    fields: data.forms[0].fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
+    description: data.forms[0].description,
+    successMessage: data.forms[0].successMessage,
+    status: data.forms[0].status,
+    fields: data.forms[0].fields,
     publishSettings: data.forms[0].publishSettings,
+    submitAction: data.forms[0].submitAction,
   } : null);
-  const currentFormShareUrl = currentForm?.publishSettings?.path
-    ? buildApiUrl(currentForm.publishSettings.path)
-    : currentForm?.slug
-      ? buildApiUrl(`/public/forms/${currentForm.slug}`)
-      : "";
+  const currentFormShareUrl = currentForm?.slug
+    ? `${window.location.origin}/f/${currentForm.slug}`
+    : "";
 
   const startBlankForm = async (templateName?: string) => {
-    const templateMap: Record<string, { description: string; fields: Array<{ key: string; label: string; type: string; required: boolean; order: number }> }> = {
+    const templateMap: Record<string, { description: string; fields: FormField[] }> = {
       "Consultation Request": {
         description: "Capture consultation requests and project scope.",
         fields: [
-          { key: "name", label: "Name", type: "Short Text", required: true, order: 0 },
-          { key: "email", label: "Email", type: "Email", required: true, order: 1 },
-          { key: "phone", label: "Phone", type: "Phone", required: false, order: 2 },
+          { key: "name", label: "Name", type: "text", required: true, order: 0 },
+          { key: "email", label: "Email", type: "email", required: true, order: 1 },
+          { key: "phone", label: "Phone", type: "phone", required: false, order: 2 },
+          { key: "message", label: "What can we help with?", type: "textarea", required: true, order: 3 },
+          { key: "preferredDate", label: "Preferred date", type: "date", required: false, order: 4 },
         ],
       },
       "Lead Generation": {
         description: "Capture lead details quickly.",
         fields: [
-          { key: "firstName", label: "First Name", type: "Short Text", required: true, order: 0 },
-          { key: "lastName", label: "Last Name", type: "Short Text", required: true, order: 1 },
-          { key: "email", label: "Email", type: "Email", required: true, order: 2 },
+          { key: "firstName", label: "First Name", type: "text", required: true, order: 0 },
+          { key: "lastName", label: "Last Name", type: "text", required: true, order: 1 },
+          { key: "email", label: "Email", type: "email", required: true, order: 2 },
+          { key: "company", label: "Company", type: "text", required: false, order: 3 },
+        ],
+      },
+      "Contact Us": {
+        description: "A simple contact form.",
+        fields: [
+          { key: "name", label: "Name", type: "text", required: true, order: 0 },
+          { key: "email", label: "Email", type: "email", required: true, order: 1 },
+          { key: "message", label: "Message", type: "textarea", required: true, order: 2 },
+        ],
+      },
+      "Event Registration": {
+        description: "Register attendees for an event.",
+        fields: [
+          { key: "name", label: "Name", type: "text", required: true, order: 0 },
+          { key: "email", label: "Email", type: "email", required: true, order: 1 },
+          { key: "phone", label: "Phone", type: "phone", required: false, order: 2 },
+          { key: "eventDate", label: "Event Date", type: "date", required: true, order: 3 },
         ],
       },
     };
@@ -1746,47 +1691,40 @@ export default function App({ onLogout }: { onLogout?: () => Promise<void> | voi
       name: templateName ?? "New Lead Form",
       description: selectedTemplate?.description ?? "Tell us a little about yourself.",
       fields: selectedTemplate?.fields ?? [
-        { key: "name", label: "Name", type: "Short Text", required: true, order: 0 },
-        { key: "email", label: "Email", type: "Email", required: true, order: 1 },
-        { key: "interest", label: "What are you interested in?", type: "Multiple Choice", required: false, order: 2 },
+        { key: "name", label: "Name", type: "text", required: true, order: 0 },
+        { key: "email", label: "Email", type: "email", required: true, order: 1 },
+        { key: "interest", label: "What are you interested in?", type: "select", required: false, options: ["Consulting", "Product", "Other"], order: 2 },
       ],
       submitAction: { createContact: true, createOpportunity: false, pipelineStage: "new" },
       status: "draft",
     });
-    setSelectedForm({
-      _id: form._id,
-      name: form.name,
-      slug: form.slug,
-      fields: form.fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
-      publishSettings: form.publishSettings,
-    });
+    setSelectedForm(form);
     navigate("form-editor");
   };
 
-  const saveCurrentForm = async () => {
-    if (!currentForm) {
-      return;
-    }
-    await data.updateForm(currentForm._id, {
-      name: currentForm.name,
-      slug: currentForm.slug,
-      fields: currentForm.fields ?? [],
+  const saveCurrentForm = async (input: { name: string; description: string; successMessage: string; fields: FormField[] }) => {
+    if (!currentForm) return;
+    const saved = await data.updateForm(currentForm._id, {
+      name: input.name,
+      description: input.description,
+      successMessage: input.successMessage,
+      fields: input.fields,
     });
+    setSelectedForm(saved);
   };
 
-  const publishCurrentForm = async () => {
-    if (!currentForm) {
-      return;
-    }
+  const publishCurrentForm = async (fields: FormField[]) => {
+    if (!currentForm) return;
+    await data.updateForm(currentForm._id, { name: currentForm.name, fields });
     const published = await data.publishForm(currentForm._id);
-    setSelectedForm({
-      _id: published._id,
-      name: published.name,
-      slug: published.slug,
-      fields: published.fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
-      publishSettings: published.publishSettings,
-    });
+    setSelectedForm(published);
     navigate("form-published");
+  };
+
+  const unpublishCurrentForm = async () => {
+    if (!currentForm) return;
+    const unpublished = await data.unpublishForm(currentForm._id);
+    setSelectedForm(unpublished);
   };
 
   const useLandingTemplate = async (templateKey: LandingTemplateKey, formId: string | null) => {
@@ -1965,19 +1903,22 @@ export default function App({ onLogout }: { onLogout?: () => Promise<void> | voi
               navigate={navigate}
               forms={data.forms}
               onSelect={(form) => {
-                setSelectedForm({
-                  _id: form._id,
-                  name: form.name,
-                  slug: form.slug,
-                  fields: form.fields?.map((field) => ({ label: field.label, type: field.type, required: field.required })),
-                  publishSettings: form.publishSettings,
-                });
+                setSelectedForm(form);
                 navigate("form-editor");
               }}
             />
           )}
           {screen === "form-templates" && <FormTemplatesScreen goBack={goBack} onCreateDraft={startBlankForm} />}
-          {screen === "form-editor" && <FormEditorScreen goBack={goBack} form={currentForm} onSave={saveCurrentForm} onPublish={publishCurrentForm} />}
+          {screen === "form-editor" && (
+            <FormEditorScreen
+              key={currentForm?._id ?? "new"}
+              goBack={goBack}
+              form={currentForm}
+              onSave={saveCurrentForm}
+              onPublish={publishCurrentForm}
+              onUnpublish={unpublishCurrentForm}
+            />
+          )}
           {screen === "form-published" && <FormPublishedScreen goBack={goBack} shareUrl={currentFormShareUrl} />}
           {screen === "landing-templates" && (
             <LandingTemplatesScreen
