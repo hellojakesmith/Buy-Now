@@ -14,7 +14,12 @@ const PageSchema = new Schema(
       description: { type: String },
       ogImageAssetId: { type: objectId, ref: "MediaAsset" },
     },
+    // Legacy section storage remains readable while new builders persist a
+    // versioned document. This lets us migrate incrementally without breaking
+    // existing published pages.
     sections: { type: Schema.Types.Mixed, default: [] },
+    builderVersion: { type: Number, default: 1 },
+    builderDocument: { type: Schema.Types.Mixed },
     publishedUrl: { type: String },
   },
   sharedSchemaOptions,
