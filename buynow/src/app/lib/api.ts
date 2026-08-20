@@ -94,5 +94,13 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}, _co
     throw new Error(errorMessageFromBody(message, `Request failed: ${response.status}`));
   }
   if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+
+  const result = await response.json() as T;
+  if (options.method?.toUpperCase() === "POST" && path === "/pages") {
+    const page = (result as { page?: { _id?: string; type?: string } }).page;
+    if (page?.type === "landing" && page._id) {
+      window.dispatchEvent(new CustomEvent("buynow:landing-page-created", { detail: { page } }));
+    }
+  }
+  return result;
 }
