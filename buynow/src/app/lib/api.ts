@@ -6,7 +6,7 @@ export type AppContext = {
 };
 
 const STORAGE_KEY = "buynow.context";
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export function buildApiUrl(path: string) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -48,7 +48,7 @@ export function contextFromAuth(response: AuthResponse): AppContext {
   };
 }
 
-function errorMessageFromBody(body: string, fallback: string) {
+export function errorMessageFromBody(body: string, fallback: string) {
   try {
     const parsed = JSON.parse(body) as { message?: string };
     if (parsed?.message) return parsed.message;

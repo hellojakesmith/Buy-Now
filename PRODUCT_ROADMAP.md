@@ -277,47 +277,47 @@ The current frontend already has mobile navigation, Home, Leads, Pipeline, More,
 
 #### Form creation
 
-- [ ] Template chooser.
-- [ ] Lead generation template.
-- [ ] Consultation template.
+- [x] Template chooser.
+- [x] Lead generation template.
+- [x] Consultation template.
 - [ ] Quote/request template.
-- [ ] Custom form template.
-- [ ] Add field.
-- [ ] Edit field.
-- [ ] Required toggle.
+- [x] Custom form template.
+- [x] Add field.
+- [x] Edit field.
+- [x] Required toggle.
 - [ ] Field duplication.
-- [ ] Field deletion.
+- [x] Field deletion.
 - [ ] Field reordering.
-- [ ] Field types: text, email, phone, textarea, select, checkbox, date.
-- [ ] Field validation.
+- [x] Field types: text, email, phone, textarea, select, checkbox, date.
+- [x] Field validation.
 - [ ] Placeholder/help text.
-- [ ] Form title/description.
-- [ ] Success message.
+- [x] Form title/description.
+- [x] Success message.
 - [ ] Submission action configuration.
 
 #### Publishing
 
-- [ ] Draft state.
-- [ ] Published state.
-- [ ] Preview.
-- [ ] Public URL.
-- [ ] Share link.
+- [x] Draft state.
+- [x] Published state.
+- [x] Preview.
+- [x] Public URL.
+- [x] Share link.
 - [ ] QR code.
-- [ ] Embed snippet.
-- [ ] Unpublish.
-- [ ] Slug uniqueness.
+- [x] Embed snippet.
+- [x] Unpublish.
+- [x] Slug uniqueness.
 
 #### Public form
 
-- [ ] Mobile renderer.
-- [ ] Client validation.
-- [ ] Server validation.
-- [ ] Spam/rate-limit protection.
-- [ ] Submission persistence.
-- [ ] Contact creation/update.
-- [ ] Opportunity creation when configured.
-- [ ] Submission success state.
-- [ ] Duplicate submission handling.
+- [x] Mobile renderer.
+- [x] Client validation.
+- [x] Server validation.
+- [x] Spam/rate-limit protection.
+- [x] Submission persistence.
+- [x] Contact creation/update.
+- [x] Opportunity creation when configured.
+- [x] Submission success state.
+- [x] Duplicate submission handling.
 
 ### Milestone M2 — Lead Capture Engine
 
