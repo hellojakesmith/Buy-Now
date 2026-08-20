@@ -10,23 +10,19 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export function buildApiUrl(path: string) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
   if (API_BASE.startsWith("http://") || API_BASE.startsWith("https://")) {
     return new URL(normalizedPath, API_BASE.endsWith("/") ? API_BASE : `${API_BASE}/`).toString();
   }
-
   return `${window.location.origin}${API_BASE}${normalizedPath}`;
 }
 
 export function loadStoredContext(): AppContext | null {
   const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return null;
-  }
-
+  if (!raw) return null;
   try {
     return JSON.parse(raw) as AppContext;
   } catch {
+    window.localStorage.removeItem(STORAGE_KEY);
     return null;
   }
 }
@@ -35,64 +31,58 @@ export function saveStoredContext(context: AppContext) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(context));
 }
 
-export async function bootstrapContext() {
-  const response = await fetch(`${API_BASE}/auth/bootstrap`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      workspaceName: "Buy Now Workspace",
-      workspaceSlug: "buy-now-workspace",
-      name: "Jake Smith",
-      ownerName: "Jake Smith",
-      email: "jake@business.com",
-      ownerEmail: "jake@business.com",
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Bootstrap failed: ${response.status}`);
-  }
-
-  return response.json() as Promise<{
-    workspace: unknown;
-    user: unknown;
-    context: AppContext;
-  }>;
+export function clearStoredContext() {
+  window.localStorage.removeItem(STORAGE_KEY);
 }
 
-export async function apiRequest<T>(
-  path: string,
-  options: RequestInit = {},
-  context?: AppContext | null,
-): Promise<T> {
+export type AuthUser = { _id: string; name: string; email: string; role?: string };
+export type AuthWorkspace = { _id: string; name: string; slug: string };
+export type AuthResponse = { workspace: AuthWorkspace; user: AuthUser };
+
+export function contextFromAuth(response: AuthResponse): AppContext {
+  return {
+    workspaceId: response.workspace._id,
+    userId: response.user._id,
+    workspaceSlug: response.workspace.slug,
+    userEmail: response.user.email,
+  };
+}
+
+export async function authRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
-  if (!(options.body instanceof FormData)) {
-    headers.set("Content-Type", "application/json");
-  }
-  if (context) {
-    headers.set("x-workspace-id", context.workspaceId);
-    headers.set("x-user-id", context.userId);
-    if (context.workspaceSlug) {
-      headers.set("x-workspace-slug", context.workspaceSlug);
-    }
-    if (context.userEmail) {
-      headers.set("x-user-email", context.userEmail);
-    }
-  }
-
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  });
-
+  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  const response = await fetch(`${API_BASE}${path}`, { ...options, credentials: "include", headers });
   if (!response.ok) {
     const message = await response.text();
     throw new Error(message || `Request failed: ${response.status}`);
   }
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
+}
 
-  if (response.status === 204) {
-    return undefined as T;
+export async function getCurrentAuth(): Promise<AuthResponse | null> {
+  const response = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+  if (response.status === 401) return null;
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Authentication check failed: ${response.status}`);
   }
+  return response.json() as Promise<AuthResponse>;
+}
 
+export async function logout() {
+  await authRequest<void>("/auth/logout", { method: "POST" });
+  clearStoredContext();
+}
+
+export async function apiRequest<T>(path: string, options: RequestInit = {}, _context?: AppContext | null): Promise<T> {
+  const headers = new Headers(options.headers);
+  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  const response = await fetch(`${API_BASE}${path}`, { ...options, credentials: "include", headers });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Request failed: ${response.status}`);
+  }
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
