@@ -1,16 +1,6 @@
-export type TemplateMediaAsset = {
-  id: string;
-  kind: 'hero' | 'background' | 'profile' | 'testimonial' | 'product';
-  url: string;
-  alt: string;
-  credit: string;
-};
+export type TemplateMediaAsset = { id: string; kind: 'hero' | 'background' | 'profile' | 'testimonial' | 'product'; url: string; alt: string; credit: string };
 
-/**
- * Curated demo imagery used as starter content for template previews.
- * Stable IDs intentionally keep the builder document independent of the URL,
- * so a user's uploaded MediaAsset can replace any starter image later.
- */
+/** Curated starter imagery for template previews. Stable IDs allow MediaAsset replacement later. */
 export const TEMPLATE_MEDIA: Record<string, TemplateMediaAsset[]> = {
   creator: [{ id: 'creator-hero', kind: 'hero', url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1600&q=85', alt: 'Creator portrait in natural light', credit: 'Unsplash' }, { id: 'creator-bg', kind: 'background', url: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=85', alt: 'Bright creative workspace', credit: 'Unsplash' }],
   coach: [{ id: 'coach-hero', kind: 'hero', url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85', alt: 'Fitness training studio', credit: 'Unsplash' }, { id: 'coach-bg', kind: 'background', url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1800&q=85', alt: 'Person exercising in a gym', credit: 'Unsplash' }],
@@ -22,5 +12,6 @@ export const TEMPLATE_MEDIA: Record<string, TemplateMediaAsset[]> = {
   product: [{ id: 'product-hero', kind: 'hero', url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1600&q=85', alt: 'Minimal premium product photograph', credit: 'Unsplash' }, { id: 'product-bg', kind: 'background', url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=1800&q=85', alt: 'Minimal product presentation background', credit: 'Unsplash' }],
 };
 
-export const getTemplateMedia = (templateId: string) => TEMPLATE_MEDIA[templateId] ?? TEMPLATE_MEDIA.creator;
+const TEMPLATE_ALIASES: Record<string, string> = { 'creator-brand': 'creator', 'service-business': 'service', 'local-business': 'local', 'lead-magnet': 'magnet', 'product-offer': 'product' };
+export const getTemplateMedia = (templateId: string) => TEMPLATE_MEDIA[TEMPLATE_ALIASES[templateId] ?? templateId] ?? TEMPLATE_MEDIA.creator;
 export const getTemplateAsset = (templateId: string, assetId: string) => getTemplateMedia(templateId).find((asset) => asset.id === assetId);
