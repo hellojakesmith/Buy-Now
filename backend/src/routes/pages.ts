@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { PageModel } from "../models/Page.js";
+import { conversionBuilderDocumentSchema } from "../schemas/conversionBuilder.js";
 import { asyncRoute, AppError, normalizeSlug, parseObjectId, requireContext } from "../utils/http.js";
 import { validateBody, validateQuery } from "../middleware/validate.js";
 import { getPagination, getPaginationSkip, paginationMeta } from "../utils/pagination.js";
@@ -22,6 +23,8 @@ const pageBodySchema = z.object({
   status: z.string().trim().max(50).optional(),
   seo: z.record(z.unknown()).optional(),
   sections: z.array(z.unknown()).max(100).optional(),
+  builderVersion: z.literal(1).optional(),
+  builderDocument: conversionBuilderDocumentSchema.optional(),
   publishedUrl: z.string().url().max(2000).optional(),
 });
 
@@ -93,6 +96,8 @@ pagesRouter.post(
       status: req.body.status ?? "draft",
       seo: req.body.seo ?? {},
       sections: req.body.sections ?? [],
+      builderVersion: req.body.builderDocument ? 1 : undefined,
+      builderDocument: req.body.builderDocument,
       publishedUrl: req.body.publishedUrl ?? `/public/pages/${slug}`,
     });
     res.status(201).json({ page });
@@ -124,6 +129,7 @@ pagesRouter.patch(
         ...req.body,
         workspaceId: context.workspaceId,
         ownerUserId: context.userId,
+        ...(req.body.builderDocument ? { builderVersion: 1 } : {}),
         ...(nextSlug ? { slug: nextSlug } : {}),
       },
       { new: true },

@@ -18,7 +18,7 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 - [ ] Define API response contracts.
 - [x] Define authentication/session architecture.
 - [x] Define public vs authenticated routes.
-- [ ] Define page schema versioning strategy.
+- [x] Define page schema versioning strategy.
 - [ ] Define analytics event taxonomy.
 - [ ] Define payment/order state machine.
 - [ ] Define automation event/action contract.
@@ -52,7 +52,7 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 - [ ] Validate ObjectIds across all remaining routes.
 - [ ] Validate enums/state transitions across all routes.
 - [x] Validate email/URL/slug/price/currency inputs on the core CRM/content/commerce routes.
-- [ ] Validate page section schemas.
+- [x] Validate page section schemas.
 - [x] Validate form field schemas.
 - [x] Validate pagination parameters on all currently paginated resource lists.
 - [ ] Validate sorting parameters across all list endpoints.
@@ -67,7 +67,7 @@ This file tracks implementation completed against `PRODUCT_ROADMAP.md`. Items ar
 - [x] Add search/filter support to orders.
 - [x] Add search/filter support to products/pages/forms.
 - [ ] Add consistent created/updated timestamps.
-- [ ] Add optimistic concurrency/version strategy where needed.
+- [x] Add optimistic concurrency/version strategy where needed.
 
 ### Pagination contract
 
@@ -185,6 +185,12 @@ Implementation proceeds in dependency order:
 - Added Zod body validation to the media upload endpoint (kind, purpose, alt/caption, related entity).
 - Added a validated `range` query parameter to the dashboard summary endpoint (today/7d/30d/90d/all), backward-compatible default `all`.
 - Added a database index on { workspaceId, userId, createdAt } for paginated notification queries.
+- Added a versioned conversion-builder document schema for page sections, blocks, themes, CTAs, and canonical form/product/page references.
+- Added server-side validation for conversion-builder documents.
+- Added a Page persistence envelope with `builderVersion` and `builderDocument` while retaining legacy `sections` for incremental migration.
+- Added a safe legacy-section migration boundary that preserves unknown legacy content rather than guessing its semantics.
+- Added automated conversion-builder schema and migration tests.
+- Added Page API validation for versioned builder documents.
 
 ### Remaining before EPIC 1 can close
 
@@ -192,10 +198,35 @@ Implementation proceeds in dependency order:
 
 ### Remaining before EPIC 2 can close
 
-- Add validation for page section schemas rather than generic arrays.
 - Add structured server logging.
 - Add/verify database indexes based on actual query patterns.
 
-## Next Implementation Target
+## Conversion Builder Suite — Current Pass
 
-**EPIC 2:** add validation for page section schemas, structured server logging, and verify database indexes against query patterns. **EPIC 5 CRM (frontend):** wire contact detail, notes, and follow-up UI; add leads/customer list views and sorting. SMTP for password reset can still land in parallel.
+### CB-1 Shared Conversion Builder Architecture
+
+- [x] Versioned builder document envelope.
+- [x] Shared section/block primitives.
+- [x] Shared CTA/action model.
+- [x] Shared theme/design-token model.
+- [x] Canonical references to existing forms/products/pages.
+- [x] Structured server validation.
+- [x] Incremental Page persistence strategy.
+- [x] Legacy migration boundary.
+- [x] Automated schema/migration tests.
+
+### CB-2 Lead Forms
+
+- [x] Advanced field schema foundation merged in PR #11.
+- [x] Server-side validation for advanced field types and constraints.
+- [x] Mobile field editor improvements.
+- [x] Public renderer support for advanced fields and conditional visibility.
+- [x] Automated form schema tests.
+- [ ] Form autosave/draft recovery.
+- [ ] Form templates.
+- [ ] AI form generation.
+- [ ] Form analytics.
+
+### Next Implementation Target
+
+**CB-3 Landing Pages:** build the shared section-based mobile editor on top of the versioned builder document. Reuse the existing `Page` domain/API and migrate the current `sections` renderer incrementally; do not create a second page-builder data model.
