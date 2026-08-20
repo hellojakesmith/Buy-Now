@@ -5,7 +5,7 @@ const ContactSchema = new Schema(
   {
     workspaceId: { type: objectId, ref: "Workspace", required: true, index: true },
     ownerUserId: { type: objectId, ref: "User", index: true },
-    source: { type: String, default: "manual" },
+    source: { type: String, default: "manual", index: true },
     kind: { type: String, enum: ["lead", "contact", "customer"], default: "lead" },
     status: {
       type: String,
@@ -28,6 +28,7 @@ const ContactSchema = new Schema(
 
 ContactSchema.index({ workspaceId: 1, email: 1 });
 ContactSchema.index({ workspaceId: 1, status: 1, lastActivityAt: -1 });
+ContactSchema.index({ workspaceId: 1, source: 1, lastActivityAt: -1 });
 
 export type Contact = InferSchemaType<typeof ContactSchema>;
 export const ContactModel = mongoose.models.Contact || model("Contact", ContactSchema);
