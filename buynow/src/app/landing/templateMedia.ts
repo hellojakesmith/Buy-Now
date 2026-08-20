@@ -16,6 +16,12 @@ export const TEMPLATE_MEDIA: Record<string, TemplateMediaAsset[]> = {
     { id: 'coach-hero', kind: 'hero', url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85', alt: 'Fitness training studio', credit: 'Unsplash' },
     { id: 'coach-bg', kind: 'background', url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1800&q=85', alt: 'Person exercising in a gym', credit: 'Unsplash' },
   ],
+  'fitness-coach': [
+    { id: 'fitness-hero', kind: 'hero', url: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1600&q=85', alt: 'Athlete training with weights in a gym', credit: 'Unsplash' },
+    { id: 'fitness-bg', kind: 'background', url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1800&q=85', alt: 'Modern fitness training facility', credit: 'Unsplash' },
+    { id: 'fitness-before-1', kind: 'testimonial', url: 'https://images.unsplash.com/photo-1548690312-e3b507d8c110?auto=format&fit=crop&w=900&q=85', alt: 'Fitness transformation before photo placeholder', credit: 'Unsplash' },
+    { id: 'fitness-after-1', kind: 'testimonial', url: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=900&q=85', alt: 'Fitness transformation after photo placeholder', credit: 'Unsplash' },
+  ],
   agency: [
     { id: 'agency-hero', kind: 'hero', url: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=85', alt: 'Modern agency workspace', credit: 'Unsplash' },
     { id: 'agency-bg', kind: 'background', url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1800&q=85', alt: 'Modern office interior', credit: 'Unsplash' },
