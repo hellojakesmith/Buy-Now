@@ -16,7 +16,12 @@ const actionSchema = z.discriminatedUnion("type", [
 
 const blockSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string().max(10000) }),
-  z.object({ type: z.literal("image"), assetId: z.string().min(1).max(100), alt: z.string().max(500).default("") }),
+  z.object({
+    type: z.literal("image"),
+    assetId: z.string().min(1).max(100),
+    alt: z.string().max(500).default(""),
+    src: z.string().url().max(2000).optional(),
+  }),
   z.object({ type: z.literal("button"), label: z.string().min(1).max(120), action: actionSchema }),
   z.object({ type: z.literal("form"), formId: z.string().min(1).max(100) }),
   z.object({ type: z.literal("product"), productId: z.string().min(1).max(100) }),
