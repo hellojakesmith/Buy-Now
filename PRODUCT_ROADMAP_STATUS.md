@@ -99,7 +99,7 @@ The exact item key remains resource-specific (`contacts`, `opportunities`, `prod
 - [ ] Verify mobile keyboard/safe-area behavior.
 - [x] Migrate API client to cookie-based authenticated sessions.
 - [x] Add login/register UI.
-- [ ] Add accessible logout action to the authenticated application shell.
+- [x] Add accessible logout action to the authenticated application shell.
 
 ## EPIC 4+ — Product Features
 
@@ -141,10 +141,10 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 - Migrated frontend API requests to credentialed cookie sessions.
 - Removed client-supplied identity headers from frontend API requests.
 - Removed the frontend dependency on `/auth/bootstrap`.
+- Added accessible Sign out control on the Settings screen that calls `/auth/logout`, clears the HttpOnly session cookie, clears local context, and returns the user to the login gate.
 
 ### Remaining before EPIC 1 can close
 
-- Add accessible logout action to the authenticated application shell.
 - Add password reset or external production identity provider.
 - Complete workspace membership/RBAC authorization.
 - Audit tenant isolation across every private route.
@@ -161,4 +161,4 @@ No feature in EPIC 4 or later is being marked complete by the API hardening/auth
 
 ## Next Implementation Target
 
-**EPIC 1 security completion + EPIC 3 shell hardening:** add the authenticated logout action, then complete RBAC/tenant isolation/security controls before expanding the Forms → CRM product sequence.
+**EPIC 1 security completion + EPIC 3 shell hardening:** complete RBAC/tenant isolation, rate limiting, CSRF protections, and password recovery before expanding the Forms → CRM product sequence.

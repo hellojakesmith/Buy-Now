@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import App from "./App";
-import { authRequest, contextFromAuth, getCurrentAuth, saveStoredContext, type AuthResponse } from "./lib/api";
+import { authRequest, contextFromAuth, getCurrentAuth, logout, saveStoredContext, type AuthResponse } from "./lib/api";
 
 type Mode = "login" | "register";
 
@@ -71,7 +71,16 @@ export default function AuthGate() {
     return <div className="min-h-screen flex items-center justify-center bg-[#F7F8FC] text-sm font-semibold text-[#6B7280]">Checking your session…</div>;
   }
 
-  if (auth) return <App />;
+  if (auth) {
+    return (
+      <App
+        onLogout={async () => {
+          await logout();
+          setAuth(null);
+        }}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#F7F8FC] px-4 py-10">

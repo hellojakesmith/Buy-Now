@@ -5,7 +5,7 @@ import {
   ShoppingBag, Package, Tag, BarChart2, Settings, CheckCircle,
   DollarSign, TrendingUp, Share2, Copy, Edit3, Trash2,
   GripVertical, X, Eye, Globe, CreditCard, Upload,
-  QrCode, MessageSquare, ShoppingCart, Zap
+  QrCode, MessageSquare, ShoppingCart, Zap, LogOut
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip
@@ -1054,7 +1054,10 @@ function NotificationsScreen({ goBack, notifications, onRead }: { goBack: () => 
 }
 
 // ── Settings Screen ────────────────────────────────────────────────────────────
-function SettingsScreen({ goBack }: { goBack: () => void }) {
+function SettingsScreen({ goBack, onLogout }: { goBack: () => void; onLogout?: () => Promise<void> | void }) {
+  const [signingOut, setSigningOut] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+
   const groups = [
     { label: "Account", items: ["Profile", "Password", "Email"] },
     { label: "Workspace", items: ["General", "Team", "Domains", "Integrations"] },
@@ -1062,6 +1065,18 @@ function SettingsScreen({ goBack }: { goBack: () => void }) {
     { label: "Notifications", items: ["Push Notifications", "Email Alerts"] },
     { label: "Subscription", items: ["Current Plan · Pro", "Upgrade", "Billing History"] },
   ];
+
+  async function handleSignOut() {
+    if (!onLogout || signingOut) return;
+    setSigningOut(true);
+    setLogoutError(null);
+    try {
+      await onLogout();
+    } catch (err) {
+      setLogoutError(err instanceof Error ? err.message : "Unable to sign out. Please try again.");
+      setSigningOut(false);
+    }
+  }
 
   return (
     <div className="pb-8">
@@ -1080,6 +1095,25 @@ function SettingsScreen({ goBack }: { goBack: () => void }) {
             </div>
           </div>
         ))}
+
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-2">Session</div>
+          <button
+            type="button"
+            onClick={() => void handleSignOut()}
+            disabled={signingOut || !onLogout}
+            aria-label="Sign out of your account"
+            className="w-full flex items-center justify-center gap-2 rounded-[16px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3.5 text-[14px] font-bold text-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <LogOut size={16} aria-hidden="true" />
+            {signingOut ? "Signing out…" : "Sign out"}
+          </button>
+          {logoutError && (
+            <div role="alert" className="mt-2 rounded-2xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] leading-5 text-[#B91C1C]">
+              {logoutError}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1637,7 +1671,7 @@ function ProductsScreen({ goBack, navigate, products }: { goBack: () => void; na
 }
 
 // ── Root App ───────────────────────────────────────────────────────────────────
-export default function App() {
+export default function App({ onLogout }: { onLogout?: () => Promise<void> | void } = {}) {
   const data = useAppData();
   const [screen, setScreen] = useState<Screen>("home");
   const [activeTab, setActiveTab] = useState<Tab>("home");
@@ -1924,7 +1958,7 @@ export default function App() {
           {screen === "analytics" && <AnalyticsScreen data={data.analytics as any} summary={data.summary} goBack={goBack} />}
           {screen === "orders" && <OrdersScreen goBack={goBack} orders={data.orders} summary={data.summary} />}
           {screen === "notifications" && <NotificationsScreen goBack={goBack} notifications={data.notifications} onRead={data.markNotificationRead} />}
-          {screen === "settings" && <SettingsScreen goBack={goBack} />}
+          {screen === "settings" && <SettingsScreen goBack={goBack} onLogout={onLogout} />}
           {screen === "forms" && (
             <FormsScreen
               goBack={goBack}
