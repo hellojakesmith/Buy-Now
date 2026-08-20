@@ -10,6 +10,7 @@
 - [x] Preview renders visible sections from the same builder document shape used by the editor.
 - [x] Preview supports text, buttons, testimonials, FAQs, images, forms, and products.
 - [x] Preview is usable on mobile and desktop-sized browser windows.
+- [x] Preview is intentionally styled as a mobile product preview rather than a generic debug renderer.
 
 ## Still required for full CB-3 exit gate
 
