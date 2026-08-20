@@ -5,11 +5,26 @@ const FormFieldSchema = new Schema(
   {
     key: { type: String, required: true, trim: true },
     label: { type: String, required: true, trim: true },
-    type: { type: String, required: true, enum: ["text", "email", "phone", "textarea", "select", "checkbox", "date"] },
+    type: {
+      type: String,
+      required: true,
+      enum: ["text", "email", "phone", "number", "textarea", "select", "multiselect", "radio", "checkbox", "date", "url"],
+    },
     required: { type: Boolean, default: false },
     options: [{ type: String }],
     placeholder: { type: String },
     helpText: { type: String },
+    validation: {
+      minLength: { type: Number },
+      maxLength: { type: Number },
+      min: { type: Number },
+      max: { type: Number },
+    },
+    conditional: {
+      fieldKey: { type: String },
+      operator: { type: String, enum: ["equals", "not_equals", "contains"] },
+      value: { type: String },
+    },
     order: { type: Number, required: true },
   },
   { _id: false },
@@ -24,11 +39,13 @@ const FormSchema = new Schema(
     status: { type: String, enum: ["draft", "published", "archived"], default: "draft" },
     description: { type: String },
     successMessage: { type: String, default: "Thanks — we received your details." },
+    successRedirectUrl: { type: String },
     fields: { type: [FormFieldSchema], default: [] },
     submitAction: {
       createContact: { type: Boolean, default: true },
       createOpportunity: { type: Boolean, default: false },
       pipelineStage: { type: String, default: "new" },
+      notificationEmail: { type: String },
     },
     publishSettings: {
       path: { type: String, trim: true },
