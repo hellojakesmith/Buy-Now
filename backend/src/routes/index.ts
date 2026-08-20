@@ -15,11 +15,14 @@ import { activityRouter } from "./activity.js";
 import { dashboardRouter } from "./dashboard.js";
 import { publicRouter } from "./public.js";
 import { usersRouter } from "./users.js";
+import { requireAuth } from "../middleware/auth.js";
 
 export const apiRouter = Router();
 
 apiRouter.use("/health", healthRouter);
 apiRouter.use("/auth", authRouter);
+apiRouter.use("/public", publicRouter);
+apiRouter.use(requireAuth);
 apiRouter.use("/workspace", workspaceRouter);
 apiRouter.use("/users", usersRouter);
 apiRouter.use("/contacts", contactsRouter);
@@ -32,5 +35,4 @@ apiRouter.use("/orders", ordersRouter);
 apiRouter.use("/notifications", notificationsRouter);
 apiRouter.use("/activity", activityRouter);
 apiRouter.use("/dashboard", dashboardRouter);
-apiRouter.use("/public", publicRouter);
 apiRouter.use("/media", mediaRouter);
