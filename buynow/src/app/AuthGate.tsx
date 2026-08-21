@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import App from "./App";
 import LandingPageBuilderHost from "./landing/LandingPageBuilderHost";
+import LandingPageCreationController from "./landing/LandingPageCreationController";
 import { authRequest, contextFromAuth, getCurrentAuth, logout, saveStoredContext, type AuthResponse } from "./lib/api";
 import PublicForm, { publicFormSlugFromPath } from "./forms/PublicForm";
 
@@ -115,6 +116,7 @@ export default function AuthGate() {
           }}
         />
         <LandingPageBuilderHost />
+        <LandingPageCreationController />
       </>
     );
   }
