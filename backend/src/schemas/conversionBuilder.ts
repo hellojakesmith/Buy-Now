@@ -31,7 +31,10 @@ const blockSchema = z.discriminatedUnion("type", [
 
 const sectionSchema = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(["hero", "content", "benefits", "social-proof", "offer", "faq", "form", "product", "cta", "footer", "custom"]),
+  // VSL is a first-class landing-page section. It was already emitted by the
+  // Fitness Coach builder and AI creation flow, so the canonical schema must
+  // accept it rather than rejecting an otherwise valid generated document.
+  type: z.enum(["hero", "content", "benefits", "social-proof", "offer", "faq", "form", "product", "vsl", "cta", "footer", "custom"]),
   visible: z.boolean().default(true),
   blocks: z.array(blockSchema).max(30),
   settings: z.record(z.unknown()).default({}),
