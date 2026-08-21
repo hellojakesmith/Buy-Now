@@ -4,9 +4,11 @@
 
 Make **AI Build** the fastest path from an idea to a professional mobile-first landing page.
 
-### User flow
+### Primary user flow
 
 `Create Landing Page → Choose goal → Describe audience + offer → Add photos/content → Add VSL/form links → AI generates → Review what was built → Edit sections → Replace media → Preview → Save → Publish`
+
+Templates remain available as an optional manual starting point, but users no longer need to choose a template before they can build.
 
 ## Implemented
 
@@ -37,6 +39,14 @@ Make **AI Build** the fastest path from an idea to a professional mobile-first l
 - [x] Post-generation "Your page is ready" summary shows the generated sections and asset usage.
 - [x] Generated content continues directly into the existing mobile editor and live preview.
 - [x] Existing editor supports replacing images from device, template media, or URL.
+
+### AI-first entry flow
+
+- [x] Landing Page creation opens AI Build as the primary experience instead of forcing template selection first.
+- [x] Templates remain accessible through an explicit "Browse templates instead" path.
+- [x] AI-generated pages are created as draft pages using the canonical builder document.
+- [x] New AI-created drafts hand off to the existing shared editor/preview flow.
+- [x] AI creation can be launched again whenever the user returns to the Landing Pages creation screen.
 
 ## Next milestones
 
