@@ -29,15 +29,99 @@ const blockSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("faq"), question: z.string().max(500), answer: z.string().max(5000) }),
 ]);
 
+const responsiveValueSchema = z.object({
+  mobile: z.string().max(100).optional(),
+  tablet: z.string().max(100).optional(),
+  desktop: z.string().max(100).optional(),
+});
+
+const designTypographySchema = z.object({
+  fontFamily: z.string().max(200),
+  displayFontFamily: z.string().max(200).optional(),
+  headingWeight: z.number().int().min(100).max(900).optional(),
+  bodyWeight: z.number().int().min(100).max(900).optional(),
+  scale: z.enum(["compact", "balanced", "expressive"]).default("balanced"),
+  headingLineHeight: z.number().finite().positive().max(3).optional(),
+  bodyLineHeight: z.number().finite().positive().max(3).optional(),
+  letterSpacing: z.string().max(50).optional(),
+});
+
+const designColorsSchema = z.object({
+  primary: z.string().max(100),
+  secondary: z.string().max(100).optional(),
+  accent: z.string().max(100).optional(),
+  background: z.string().max(100),
+  surface: z.string().max(100),
+  text: z.string().max(100),
+  mutedText: z.string().max(100),
+  inverseText: z.string().max(100).optional(),
+});
+
+const designLayoutSchema = z.object({
+  contentWidth: z.enum(["narrow", "standard", "wide"]).default("standard"),
+  sectionSpacing: z.enum(["tight", "balanced", "airy"]).default("balanced"),
+  density: z.enum(["minimal", "balanced", "rich"]).default("balanced"),
+  alignment: z.enum(["left", "center", "mixed"]).default("left"),
+  grid: z.enum(["single", "two-column", "three-column", "editorial"]).default("single"),
+  mobileStack: z.boolean().default(true),
+});
+
+const imageTreatmentSchema = z.object({
+  mode: z.enum(["inline", "full-bleed", "background", "floating", "editorial", "collage", "before-after"]).default("inline"),
+  fit: z.enum(["cover", "contain", "natural"]).default("cover"),
+  focalPoint: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).optional(),
+  overlay: z.string().max(100).optional(),
+  aspectRatio: z.enum(["auto", "1:1", "4:5", "3:2", "16:9"]).default("auto"),
+});
+
+const responsiveLayoutSchema = z.object({
+  typography: z.object({
+    displaySize: responsiveValueSchema.optional(),
+    headingSize: responsiveValueSchema.optional(),
+    bodySize: responsiveValueSchema.optional(),
+  }).default({}),
+  spacing: z.object({
+    section: responsiveValueSchema.optional(),
+    container: responsiveValueSchema.optional(),
+  }).default({}),
+  columns: z.object({
+    mobile: z.number().int().min(1).max(2).default(1),
+    tablet: z.number().int().min(1).max(4).default(2),
+    desktop: z.number().int().min(1).max(6).default(3),
+  }).default({ mobile: 1, tablet: 2, desktop: 3 }),
+  hero: z.enum(["stacked", "split", "centered"]).default("stacked"),
+  cta: z.enum(["inline", "full-width", "stacked"]).default("full-width"),
+});
+
+const designSpecSchema = z.object({
+  version: z.literal(1).default(1),
+  visualDirection: z.string().max(500).default("Clean, premium, conversion-focused"),
+  typography: designTypographySchema,
+  colors: designColorsSchema,
+  layout: designLayoutSchema,
+  responsive: responsiveLayoutSchema,
+  defaultImageTreatment: imageTreatmentSchema,
+  radius: z.enum(["sharp", "soft", "rounded", "pill"]).default("soft"),
+  shadows: z.enum(["none", "subtle", "elevated"]).default("subtle"),
+  buttonStyle: z.enum(["solid", "outline", "soft", "pill"]).default("solid"),
+});
+
+const conversionStrategySchema = z.object({
+  objective: z.enum(["lead", "application", "call", "purchase", "signup", "waitlist", "event"]).optional(),
+  trafficSource: z.enum(["instagram", "facebook", "tiktok", "google", "other"]).optional(),
+  trafficTemperature: z.enum(["cold", "warm", "existing"]).optional(),
+  primaryCta: z.string().max(120).optional(),
+  messageMatch: z.string().max(1000).optional(),
+  trustRequirements: z.array(z.string().max(300)).max(20).default([]),
+});
+
 const sectionSchema = z.object({
   id: z.string().min(1).max(100),
-  // VSL is a first-class landing-page section. It was already emitted by the
-  // Fitness Coach builder and AI creation flow, so the canonical schema must
-  // accept it rather than rejecting an otherwise valid generated document.
   type: z.enum(["hero", "content", "benefits", "social-proof", "offer", "faq", "form", "product", "vsl", "cta", "footer", "custom"]),
   visible: z.boolean().default(true),
   blocks: z.array(blockSchema).max(30),
   settings: z.record(z.unknown()).default({}),
+  imageTreatment: imageTreatmentSchema.optional(),
 });
 
 export const themeSchema = z.object({
@@ -52,16 +136,21 @@ export const conversionBuilderDocumentSchema = z.object({
   schemaVersion: z.literal(CONVERSION_BUILDER_SCHEMA_VERSION),
   sections: z.array(sectionSchema).max(100),
   theme: themeSchema,
+  designSpec: designSpecSchema.optional(),
+  conversionStrategy: conversionStrategySchema.optional(),
   references: z.array(referenceSchema).max(100).default([]),
   metadata: z.object({
     templateKey: z.string().max(100).optional(),
     aiGenerated: z.boolean().default(false),
     aiPromptVersion: z.string().max(100).optional(),
+    designSpecVersion: z.number().int().positive().optional(),
   }).default({ aiGenerated: false }),
 });
 
 export type ConversionBuilderDocument = z.infer<typeof conversionBuilderDocumentSchema>;
 export type ConversionBuilderSection = z.infer<typeof sectionSchema>;
+export type LandingPageDesignSpec = z.infer<typeof designSpecSchema>;
+export type LandingPageConversionStrategy = z.infer<typeof conversionStrategySchema>;
 
 export function validateConversionBuilderDocument(input: unknown): ConversionBuilderDocument {
   return conversionBuilderDocumentSchema.parse(input);
