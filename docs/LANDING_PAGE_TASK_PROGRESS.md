@@ -30,14 +30,53 @@ See `docs/LANDING_PAGE_CODE_MAP.md` for the implementation map.
 - [x] Add schema validation coverage for a representative fitness landing page.
 - [x] Add rejection coverage for invalid responsive/design values.
 
+## Completed in `feat/landing-page-ai-strategy-design-generation`
+
+### LP-T2.2 — AI strategy generation
+
+- [x] Create structured landing-page strategy output.
+- [x] Determine conversion objective from explicit input or offer context.
+- [x] Determine traffic source from explicit input or prompt context.
+- [x] Determine traffic temperature from explicit input or prompt context.
+- [x] Determine recommended architecture and section sequence.
+- [x] Determine CTA strategy.
+- [x] Determine trust strategy.
+- [x] Determine visual direction.
+- [x] Determine required/optional content through structured strategy metadata.
+- [x] Preserve authoritative user-provided facts.
+- [x] Encode no-invention rules into the provider prompt and deterministic strategy.
+
+### LP-T2.3 — AI design specification
+
+- [x] Generate visual direction.
+- [x] Generate color palette.
+- [x] Generate typography hierarchy.
+- [x] Generate spacing/rhythm rules.
+- [x] Generate radius/shadow rules.
+- [x] Generate content width/grid behavior.
+- [x] Generate section layout variants.
+- [x] Generate image treatments.
+- [x] Generate CTA treatment.
+- [x] Generate responsive rules.
+- [x] Store design specification in the versioned page document.
+- [x] Validate provider output with Zod.
+- [x] Add deterministic fallback when provider generation fails or is unavailable.
+- [x] Add automated tests for fitness, purchase, explicit overrides, and schema-valid fallback generation.
+
+### Implementation notes
+
+`backend/src/services/landingPageDesign.ts` is now the canonical deterministic strategy/design layer. `backend/src/routes/ai.ts` uses it both to guide the configured AI provider and to produce a complete fallback document. The frontend does not need to know or configure the underlying design-system decisions.
+
+The AI provider receives structured business context, the selected conversion strategy, section plan, trust requirements, and design direction instead of only a free-form prompt. Provider output is validated and enriched with missing design intelligence before it is returned.
+
 ## What this enables
 
-The backend can now persist a professional design specification alongside the existing builder document without requiring users to manually configure Figma-style foundations. The next implementation work can build an AI strategy/design service that produces this contract and a renderer that consumes it.
+Buy Now now has a backend design-intelligence layer capable of deciding the conversion architecture and generating a professional design specification without requiring users to manually configure Figma-style foundations. The next work should consume this specification in the renderer and progressively extract the landing-page feature from `App.tsx`.
 
 ## Next recommended execution batch
 
-1. LP-T2.2 — AI strategy generation service.
-2. LP-T2.3 — AI design-spec generation with deterministic fallback.
-3. LP-T1.1 — Extract the landing-page feature from `App.tsx` incrementally.
-4. LP-T3.1–T3.4 — Build renderer primitives that consume the design specification.
+1. LP-T1.1 — Extract the landing-page feature from `App.tsx` incrementally.
+2. LP-T3.1–T3.4 — Build renderer primitives that consume the design specification.
+3. LP-T4.1–T4.6 — Build professional section variants, beginning with the fitness-coach flagship.
+4. LP-T7.1–T7.3 — Add AI-aware media composition and image treatment.
 5. LP-T9.1–T9.3 — Make preview/public rendering use the same canonical document and responsive rules.
