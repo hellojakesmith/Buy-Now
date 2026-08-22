@@ -1,126 +1,165 @@
-# Buy Now — Landing Page Design & Development Roadmap
+# Buy Now — Ad Landing Page Design & Development Roadmap
 
-> Dedicated execution roadmap for making Landing Pages the flagship design and creation experience in Buy Now.
+> **Product goal:** Buy Now turns an entrepreneur's offer, ad traffic, and assets into a beautiful, conversion-focused landing page in minutes.
 >
-> This roadmap complements `PRODUCT_ROADMAP_CONVERSION_BUILDER.md`. The conversion-builder roadmap defines the broader product suite; this document defines the focused design and engineering work required to make generated landing pages feel professionally designed, mobile-first, conversion-focused, and easy to edit.
+> This roadmap complements `PRODUCT_ROADMAP_CONVERSION_BUILDER.md`. That roadmap covers the broader conversion-builder suite. This roadmap is the focused execution plan for making **Landing Pages** the flagship Buy Now experience.
 
-## 1. Product vision
+## North Star
 
-Buy Now should let a creator, coach, consultant, or small business owner provide an offer, a few assets, and a goal and receive a landing page that feels like a professional designer built it.
+An entrepreneur with no design or CRO experience should be able to:
 
-The target is **not** a generic collection of rounded cards. The target is controlled, responsive art direction with strong hierarchy, typography, imagery, spacing, conversion flow, and brand consistency.
+`Describe offer → Add audience/goal → Upload assets → Add VSL/form/product → AI creates page → Preview → Edit → Improve with AI → Publish → Measure`
 
-### North-star flow
+The finished page should feel like a professional designer built it specifically for the ad traffic—not like an AI assembled a stack of generic cards.
 
-`Describe offer → AI/design system → Generate → Preview → Edit → Improve → Publish → Measure`
+### Core product principles
 
-### Core constraints
-
-- Mobile-first: design the 390px-ish experience first.
-- One-handed editing: no desktop-style configuration panels as the primary mobile interaction.
-- 15-minute first-launch goal.
-- Structured page specifications, not arbitrary AI-generated code.
-- Preview and published output should share the same rendering contract.
-- User media must be easy to upload, replace, crop, reposition, and reuse.
-- AI should remove design work rather than create another complicated workflow.
+- **Ad-first:** the page continues the promise, creative direction, and audience context of the ad.
+- **Mobile-first:** design the 390px-ish experience first because entrepreneurs create on mobile and much ad traffic is mobile.
+- **Conversion-first:** every section should have a job in the visitor journey.
+- **Design-system driven:** AI selects from controlled design tokens, layouts, and components instead of generating arbitrary frontend code.
+- **Asset-first:** creator photos, videos, testimonials, logos, and brand assets are first-class inputs.
+- **15-minute launch:** a first-time entrepreneur should reach a publishable page quickly.
+- **Simple editing:** users edit sections and content without learning web design.
+- **Preview equals reality:** preview and published pages use the same rendering contract.
+- **Safe AI:** AI never invents customer results, prices, guarantees, analytics, or authoritative business facts.
 
 ---
 
-# 2. EPIC LP-1 — Figma Design System & Visual Foundation
+# EPIC LP-1 — Ad Landing Page Strategy Engine
 
-**Goal:** Establish a professional visual system before expanding templates and section implementations.
+**Goal:** Build pages for the traffic source and conversion objective rather than treating every landing page as a generic website.
 
-## Design deliverables
+### Inputs
 
-- [ ] Create a Figma **Buy Now Landing Page Design System**.
-- [ ] Define mobile-first 390px foundations.
-- [ ] Define tablet and desktop breakpoints.
-- [ ] Define 12-column desktop grid.
-- [ ] Define mobile spacing grid.
-- [ ] Define content max-widths.
-- [ ] Define spacing scale.
-- [ ] Define typography scale.
-- [ ] Define heading/body/display styles.
-- [ ] Define letter-spacing and line-height rules.
-- [ ] Define color tokens.
-- [ ] Define surface/background tokens.
-- [ ] Define border, radius, and shadow tokens.
-- [ ] Define button height/touch-target rules.
-- [ ] Define icon sizing rules.
-- [ ] Define image aspect-ratio rules.
+- [ ] Offer/business description.
+- [ ] Target audience.
+- [ ] Offer promise/outcome.
+- [ ] Primary CTA.
+- [ ] Price, when applicable.
+- [ ] Traffic source: Instagram, Facebook, TikTok, Google, other.
+- [ ] Traffic temperature: cold, warm, existing audience.
+- [ ] Conversion objective: lead, application, call, product sale, course, email signup, event, waitlist.
+- [ ] Ad copy/creative, when available.
+- [ ] Brand voice.
+- [ ] Photos.
+- [ ] VSL/video.
+- [ ] Form URL.
+- [ ] Product/checkout connection.
 
-## Brand themes
+### AI page strategy
 
-- [ ] Neutral/minimal.
-- [ ] High-energy fitness.
+- [ ] Analyze audience.
+- [ ] Analyze offer.
+- [ ] Analyze ad promise.
+- [ ] Determine conversion objective.
+- [ ] Determine traffic temperature.
+- [ ] Choose page architecture.
+- [ ] Determine trust requirements.
+- [ ] Determine CTA frequency.
+- [ ] Determine recommended sections.
+- [ ] Determine visual direction.
+- [ ] Preserve ad-to-page message match.
+
+### Acceptance criteria
+
+- A page generated from an ad clearly continues the ad's promise and visual direction.
+- The architecture changes based on objective and traffic temperature.
+- The user does not have to manually choose a template before AI can produce a page.
+
+---
+
+# EPIC LP-2 — Figma Design System & Visual Foundation
+
+**Goal:** Establish the visual language that makes generated pages feel professionally designed.
+
+### Figma foundations
+
+- [ ] Create Buy Now Landing Page Design System.
+- [ ] 390px mobile source-of-truth frame.
+- [ ] 768px tablet frame.
+- [ ] 1440px desktop frame.
+- [ ] Desktop 12-column grid.
+- [ ] Mobile spacing grid.
+- [ ] Content max-widths.
+- [ ] Spacing scale.
+- [ ] Typography scale.
+- [ ] Display/headline/body styles.
+- [ ] Line-height and letter-spacing rules.
+- [ ] Color tokens.
+- [ ] Surface/background tokens.
+- [ ] Border/radius/shadow tokens.
+- [ ] Button/touch-target rules.
+- [ ] Icon sizing.
+- [ ] Image aspect-ratio rules.
+
+### Visual directions
+
+- [ ] Bold/high-energy.
 - [ ] Luxury/editorial.
+- [ ] Minimal/clean.
 - [ ] Creator/personal brand.
-- [ ] Service/business.
 - [ ] Dark/high-contrast.
+- [ ] Warm/community.
+- [ ] Product-focused.
 
-## Acceptance criteria
+### Acceptance criteria
 
-- A designer can build a new landing page without inventing new spacing, typography, button, or card rules.
-- The design tokens can be represented directly in the page schema.
-- Mobile is the source of truth rather than a desktop layout scaled down afterward.
+- Designers can build pages without inventing new spacing, typography, or component rules.
+- Tokens map directly to the application page schema.
+- Mobile is intentionally designed, not desktop simply scaled down.
 
 ---
 
-# 3. EPIC LP-2 — Gold-Standard Fitness Landing Page
+# EPIC LP-3 — Gold-Standard Ad Landing Page
 
-**Goal:** Create one complete professional reference design before expanding the template library.
+**Goal:** Build one Figma-quality reference page that becomes the visual benchmark for the product.
 
-## Figma pages
+### First reference: Fitness Coach / 6-Week Challenge
 
 - [ ] 390px mobile.
 - [ ] 768px tablet.
 - [ ] 1440px desktop.
-- [ ] Editor/preview states.
-- [ ] Empty/placeholder media states.
-- [ ] Long-copy states.
-- [ ] Error/fallback states.
-
-## Page architecture
-
-- [ ] Navigation/brand header.
-- [ ] Hero.
-- [ ] Credibility/social-proof strip.
-- [ ] VSL.
+- [ ] Navigation/brand.
+- [ ] High-impact hero.
+- [ ] Credibility strip.
 - [ ] Problem → solution.
-- [ ] Benefits/features.
+- [ ] VSL.
+- [ ] Benefits.
 - [ ] Before/after results.
 - [ ] Testimonials.
 - [ ] Program/offer.
-- [ ] Pricing/CTA.
+- [ ] Pricing/application CTA.
+- [ ] Objection handling.
 - [ ] FAQ.
 - [ ] Final CTA.
 - [ ] Footer.
 
-## Fitness requirements
+### Fitness-specific requirements
 
 - [ ] Title.
 - [ ] Subtitle.
-- [ ] VSL/video.
-- [ ] Form CTA/link.
-- [ ] Before/after images.
-- [ ] Testimonial content.
-- [ ] Offer details.
-- [ ] Trust/credibility elements.
+- [ ] VSL.
+- [ ] Form link.
+- [ ] Before/after photography.
+- [ ] Testimonials.
+- [ ] Program details.
+- [ ] Trust/credibility.
+- [ ] Strong mobile CTA.
 
-## Acceptance criteria
+### Acceptance criteria
 
-- The reference page looks like a professionally art-directed marketing site, not an assembled prototype.
-- The same design can be rendered at mobile, tablet, and desktop widths without losing hierarchy.
+The page must look like a premium professional marketing page—not a collection of rounded cards—and must remain visually coherent across mobile, tablet, and desktop.
 
 ---
 
-# 4. EPIC LP-3 — Reusable Design Components & Section Variants
+# EPIC LP-4 — Reusable Design System Components & Section Variants
 
-**Goal:** Translate the Figma system into controlled, reusable UI primitives and page sections.
+**Goal:** Turn the Figma system into controlled, reusable application primitives.
 
-## Components
+### Components
 
-- [ ] Typography primitives.
+- [ ] Typography.
 - [ ] Buttons.
 - [ ] Links.
 - [ ] Badges.
@@ -128,159 +167,150 @@ The target is **not** a generic collection of rounded cards. The target is contr
 - [ ] Cards.
 - [ ] Dividers.
 - [ ] Media frames.
-- [ ] Video frames.
+- [ ] Video/VSL frames.
 - [ ] Testimonial cards.
 - [ ] Before/after cards.
-- [ ] Pricing/offer cards.
+- [ ] Offer/pricing cards.
 - [ ] FAQ rows.
 - [ ] Navigation.
 - [ ] Footer.
 
-## Component variants
+### Section variants
 
-### Buttons
-
-- [ ] Primary.
-- [ ] Secondary.
-- [ ] Outline.
-- [ ] Ghost.
-- [ ] Dark.
-- [ ] Icon/arrow.
-- [ ] Small/medium/large.
-
-### Hero
-
+**Hero**
 - [ ] Editorial split.
 - [ ] Full-bleed image.
 - [ ] Image background.
 - [ ] Centered minimal.
 - [ ] Product/offer hero.
+- [ ] Video-led hero.
 
-### Benefits
-
+**Benefits**
 - [ ] Three-card.
 - [ ] Four-card.
 - [ ] Icon grid.
 - [ ] Editorial.
 - [ ] Numbered.
 
-### Social proof
-
-- [ ] Logo strip.
+**Social proof**
 - [ ] Quote.
 - [ ] Testimonial cards.
 - [ ] Results grid.
 - [ ] Before/after.
 - [ ] Metrics.
+- [ ] Logo strip.
 
-### CTA/offer
-
-- [ ] Simple CTA.
-- [ ] Lead-form CTA.
+**Offer/CTA**
+- [ ] Lead CTA.
+- [ ] Application CTA.
 - [ ] Product CTA.
 - [ ] Pricing card.
-- [ ] Full-width conversion block.
+- [ ] Full-width CTA.
 
-## Acceptance criteria
+### Acceptance criteria
 
-- Variants are data-driven and selected through the page schema.
-- Existing pages remain renderable when new variants are introduced.
-- Components have mobile and desktop behavior defined rather than relying on accidental CSS wrapping.
+- AI selects variants through structured page data.
+- Existing documents remain renderable.
+- Every variant has intentional mobile and desktop behavior.
 
 ---
 
-# 5. EPIC LP-4 — Mobile Landing Page Editor UX
+# EPIC LP-5 — Mobile-First Creation & Editing UX
 
-**Goal:** Make editing a page from a phone feel simple rather than like using desktop Figma on a small screen.
+**Goal:** Make creating and editing a professional ad landing page easy from a phone.
 
-## Creation flow
+### Creation flow
 
-- [ ] AI-first creation.
-- [ ] Minimal business/offer intake.
-- [ ] Asset upload during creation.
-- [ ] AI-generated first draft.
-- [ ] Immediate preview after creation.
-- [ ] Explicit transition from preview → edit.
+- [ ] AI-first creation flow.
+- [ ] Minimal offer intake.
+- [ ] Optional ad-copy input.
+- [ ] Audience input.
+- [ ] Conversion objective.
+- [ ] Traffic source/temperature.
+- [ ] Asset upload.
+- [ ] VSL/form/product connection.
+- [ ] Generate page.
+- [ ] Immediate preview.
+- [ ] Explicit Preview → Edit transition.
 
-## Section editing
+### Editing
 
-- [ ] Section list.
-- [ ] Tap section to edit.
+- [ ] Tap any visible section to edit.
 - [ ] Inline text editing.
 - [ ] Image replacement.
 - [ ] Upload from device.
 - [ ] Paste image URL.
-- [ ] Media library selection.
-- [ ] Video/VSL URL editing.
+- [ ] Media library.
+- [ ] VSL URL editing.
 - [ ] CTA editing.
-- [ ] Section visibility.
+- [ ] Add section.
 - [ ] Duplicate section.
 - [ ] Reorder section.
+- [ ] Hide/show section.
 - [ ] Delete section.
-- [ ] Add section.
+- [ ] Undo/redo.
+- [ ] Autosave.
+- [ ] Draft recovery.
 
-## Mobile interaction model
+### Mobile interaction model
 
-- [ ] Bottom-sheet controls.
-- [ ] Full-screen focused editors where appropriate.
+- [ ] Bottom sheets.
+- [ ] Focused full-screen editors where useful.
 - [ ] Sticky primary action.
 - [ ] Large touch targets.
 - [ ] Keyboard-safe editing.
-- [ ] Autosave.
-- [ ] Save-state indicator.
-- [ ] Undo/redo.
-- [ ] Draft recovery.
-- [ ] Unsaved-change protection.
+- [ ] Clear save state.
+- [ ] No desktop-style property panel as the primary mobile interaction.
 
-## Acceptance criteria
+### Acceptance criteria
 
-A new user can tap any visible section, understand what can be changed, make the change, return to the page, and preview the result without hunting through menus.
+A first-time user can tap a section, understand what can be changed, make the change, return to the page, and preview the result without hunting through menus.
 
 ---
 
-# 6. EPIC LP-5 — Responsive Renderer & Visual Parity
+# EPIC LP-6 — Responsive Renderer & Preview/Published Parity
 
-**Goal:** Make the preview and published page look intentional at every supported viewport.
+**Goal:** Make every generated page look intentionally designed at every viewport.
 
 - [ ] Mobile-first renderer.
 - [ ] Tablet layout rules.
 - [ ] Desktop layout rules.
-- [ ] Container/grid rules.
-- [ ] Typography scaling.
-- [ ] Section spacing scaling.
-- [ ] Image crop/focal-point behavior.
-- [ ] Overflow protection.
+- [ ] Container/grid system.
+- [ ] Responsive typography.
+- [ ] Responsive spacing.
+- [ ] Image focal-point/crop behavior.
 - [ ] Long headline handling.
 - [ ] Long-copy handling.
-- [ ] Button wrapping rules.
-- [ ] Video aspect ratio handling.
-- [ ] Safe-area handling.
-- [ ] Published revision isolation.
+- [ ] Button wrapping.
+- [ ] VSL aspect-ratio handling.
+- [ ] Safe-area support.
+- [ ] Overflow protection.
 - [ ] Preview/published renderer parity.
+- [ ] Published revision isolation.
 
-## Acceptance criteria
+### Acceptance criteria
 
-No section should look like a desktop card squeezed onto a phone. The renderer must preserve the intended visual hierarchy at 390px, tablet, and desktop widths.
+The page never looks like a desktop card squeezed onto a phone. The intended visual hierarchy is preserved at mobile, tablet, and desktop sizes.
 
 ---
 
-# 7. EPIC LP-6 — Media & Image Composition System
+# EPIC LP-7 — Media & Image Composition System
 
-**Goal:** Make user-provided photography a first-class design asset.
+**Goal:** Make creator photography a primary design ingredient.
 
-## Upload
+### Media
 
 - [ ] Upload from device.
 - [ ] Paste URL.
 - [ ] Media library.
 - [ ] Upload progress.
-- [ ] Retry failed uploads.
-- [ ] Remove/replace image.
-- [ ] Reuse uploaded asset.
+- [ ] Retry failures.
+- [ ] Replace/remove.
+- [ ] Reuse asset.
 - [ ] Image optimization.
 - [ ] Responsive variants.
 
-## Editing
+### Image editing
 
 - [ ] Crop.
 - [ ] Focal point.
@@ -291,129 +321,151 @@ No section should look like a desktop card squeezed onto a phone. The renderer m
 - [ ] Overlay/gradient.
 - [ ] Alt text.
 
-## Design treatments
+### Design treatments
 
 - [ ] Full bleed.
-- [ ] Rounded editorial.
-- [ ] Portrait.
+- [ ] Editorial portrait.
 - [ ] Landscape.
 - [ ] Floating image.
 - [ ] Collage.
 - [ ] Before/after.
 - [ ] Image background.
+- [ ] Overlapping/offset composition.
 
-## Acceptance criteria
+### Acceptance criteria
 
-A user can upload photos once and use them across hero, testimonials, results, gallery, and background treatments without manually managing URLs or technical asset IDs.
+Users upload photos once and Buy Now can intelligently place them in hero, results, testimonials, backgrounds, and supporting sections without technical asset management.
 
 ---
 
-# 8. EPIC LP-7 — AI Design & Page Generation
+# EPIC LP-8 — AI Art Direction & Page Generation
 
-**Goal:** Make AI the designer while keeping output structured, predictable, editable, and safe.
+**Goal:** Make AI the designer while keeping output structured, editable, predictable, and safe.
 
-## AI inputs
+### AI should decide
 
-- [ ] Business description.
-- [ ] Audience.
-- [ ] Offer.
-- [ ] Desired outcome.
-- [ ] Price where relevant.
-- [ ] CTA.
-- [ ] Brand voice.
-- [ ] Uploaded images.
-- [ ] VSL.
-- [ ] Form URL.
-- [ ] Product reference.
+- [ ] Page architecture.
+- [ ] Conversion objective.
+- [ ] Section sequence.
+- [ ] Theme.
+- [ ] Typography pairing.
+- [ ] Layout variants.
+- [ ] Image treatments.
+- [ ] CTA placement.
+- [ ] Trust elements.
+- [ ] Content hierarchy.
+- [ ] Mobile composition.
 
-## AI planning
-
-- [ ] Audience extraction.
-- [ ] Offer extraction.
-- [ ] Conversion goal selection.
-- [ ] Page architecture selection.
-- [ ] Theme selection.
-- [ ] Typography pairing selection.
-- [ ] Section variant selection.
-- [ ] Image-treatment selection.
-- [ ] CTA strategy.
-- [ ] Trust-element recommendations.
-
-## Generation
+### AI generation
 
 - [ ] Full-page generation.
 - [ ] Section generation.
-- [ ] Headline variants.
-- [ ] Subtitle variants.
-- [ ] Benefit copy.
+- [ ] Headlines.
+- [ ] Subtitles.
+- [ ] Benefits.
 - [ ] Objection handling.
-- [ ] FAQ generation.
-- [ ] Testimonial layout.
+- [ ] FAQ.
 - [ ] Offer copy.
+- [ ] CTA copy.
 - [ ] SEO metadata.
 
-## AI editing commands
+### Ad/message match
 
-- [ ] Make this more premium.
-- [ ] Make this feel more like a fitness brand.
-- [ ] Make this clearer.
-- [ ] Make the CTA stronger.
-- [ ] Make this more concise.
-- [ ] Make this more trustworthy.
-- [ ] Improve mobile layout.
-- [ ] Improve conversion flow.
-- [ ] Replace this section with a better one.
+- [ ] Carry ad promise into hero.
+- [ ] Carry audience context into copy.
+- [ ] Maintain visual continuity.
+- [ ] Avoid bait-and-switch messaging.
+- [ ] Preserve user-provided offer facts.
 
-## Guardrails
+### Guardrails
 
 - [ ] Structured JSON output.
 - [ ] Schema validation.
 - [ ] Fallback generation.
-- [ ] Never generate executable frontend code.
-- [ ] Never invent customer results or analytics.
+- [ ] No executable frontend code from AI.
+- [ ] No invented customer results.
+- [ ] No invented pricing/guarantees.
 - [ ] Flag assumptions.
-- [ ] Preview mutations before destructive changes.
-- [ ] Preserve authoritative product/price/form data.
-
-## Acceptance criteria
-
-AI output always maps to supported design tokens, section variants, components, and media references. Generated pages remain fully editable by the user.
+- [ ] Preserve authoritative form/product data.
 
 ---
 
-# 9. EPIC LP-8 — Conversion & Trust Section System
+# EPIC LP-9 — AI Improve / Design Critique
 
-**Goal:** Make pages strategically persuasive, not merely visually attractive.
+**Goal:** Let entrepreneurs improve professional quality without learning design.
 
+### One-tap actions
+
+- [ ] ✨ Make it more premium.
+- [ ] 🎯 Improve conversion.
+- [ ] 📱 Improve mobile.
+- [ ] ✍️ Improve copy.
+- [ ] 🖼️ Improve image placement.
+- [ ] 🎨 Change visual direction.
+- [ ] 🔥 Strengthen CTA.
+- [ ] 🧠 Simplify the page.
+- [ ] 🛡️ Improve trust.
+- [ ] Replace this section with a better one.
+
+### AI design audit
+
+- [ ] Weak headline.
+- [ ] Weak CTA.
+- [ ] Poor hierarchy.
+- [ ] Excessive/insufficient spacing.
+- [ ] Poor image treatment.
+- [ ] Missing social proof.
+- [ ] Missing offer information.
+- [ ] Weak conversion path.
+- [ ] Mobile overflow.
+- [ ] Broken links.
+- [ ] Missing trust signals.
+
+### Safety
+
+- [ ] Show proposed changes before destructive mutations when appropriate.
+- [ ] Preserve user content.
+- [ ] Preserve authoritative business data.
+- [ ] Undo AI changes.
+
+---
+
+# EPIC LP-10 — Conversion Architecture & Trust
+
+**Goal:** Ensure beautiful pages are also strategically effective for ad traffic.
+
+### Core sections
+
+- [ ] Promise-driven hero.
 - [ ] Credibility strip.
-- [ ] Social proof.
-- [ ] Testimonials.
-- [ ] Before/after results.
+- [ ] Problem/solution.
+- [ ] VSL.
 - [ ] Benefits.
 - [ ] Features.
-- [ ] Problem/solution.
+- [ ] Testimonials.
+- [ ] Before/after.
+- [ ] Metrics.
 - [ ] Objection handling.
-- [ ] VSL.
 - [ ] Offer breakdown.
 - [ ] Pricing.
-- [ ] Guarantee.
+- [ ] Guarantee where user provides one.
 - [ ] FAQ.
 - [ ] Lead capture.
-- [ ] Product CTA.
-- [ ] Buy Now CTA.
+- [ ] Product purchase.
+- [ ] Application.
 - [ ] Final CTA.
 
-## CTA strategy
+### CTA strategy
 
 - [ ] Hero CTA.
-- [ ] VSL CTA.
+- [ ] Post-VSL CTA.
 - [ ] Post-proof CTA.
 - [ ] Offer CTA.
 - [ ] Final CTA.
 - [ ] Context-aware CTA copy.
 - [ ] Real form/product connections.
 
-## Analytics
+### Analytics foundation
 
 - [ ] Page view.
 - [ ] CTA click.
@@ -426,210 +478,178 @@ AI output always maps to supported design tokens, section variants, components, 
 
 ---
 
-# 10. EPIC LP-9 — Preview, Publish & Production Quality
+# EPIC LP-11 — Preview, Publish & Production Quality
 
-**Goal:** Make preview and published output reliable enough to be the user's source of truth.
+**Goal:** Make the landing page reliable from creation through public traffic.
 
 - [ ] Preview immediately after creation.
-- [ ] Mobile preview.
-- [ ] Tablet preview.
-- [ ] Desktop preview.
+- [ ] Mobile/tablet/desktop preview.
 - [ ] Edit from preview.
 - [ ] Return to preview without losing changes.
 - [ ] Publish validation.
-- [ ] Draft/published revision model.
+- [ ] Draft/published revisions.
 - [ ] Public URL.
-- [ ] Share action.
+- [ ] Share.
 - [ ] Open Graph preview.
 - [ ] SEO metadata.
 - [ ] Favicon/brand image.
 - [ ] Loading states.
 - [ ] Empty states.
 - [ ] Error states.
-- [ ] Recovery from malformed/legacy documents.
-- [ ] Error boundary around editor.
+- [ ] Malformed/legacy document recovery.
+- [ ] Editor error boundary.
 - [ ] No blank-screen failures.
 
-## Acceptance criteria
+### Acceptance criteria
 
-`Create → Preview → Edit → Preview → Publish → Open public URL` works reliably after refresh and across supported mobile/desktop viewports.
+`Create → Preview → Edit → Preview → Publish → Open public URL` works reliably after refresh and on supported mobile/desktop viewports.
 
 ---
 
-# 11. EPIC LP-10 — Accessibility, Performance & Visual QA
+# EPIC LP-12 — Accessibility, Performance & Visual Regression
 
-**Goal:** Make generated pages production-grade.
+**Goal:** Make every generated page production-grade.
 
-## Accessibility
+### Accessibility
 
 - [ ] Semantic headings.
 - [ ] Keyboard navigation.
 - [ ] Focus states.
-- [ ] Accessible buttons/links.
+- [ ] Accessible links/buttons.
 - [ ] Image alt text.
 - [ ] Video accessibility.
 - [ ] Color contrast.
-- [ ] Reduced-motion handling.
+- [ ] Reduced motion.
 - [ ] Form accessibility.
 
-## Performance
+### Performance
 
 - [ ] Image compression.
 - [ ] Responsive image delivery.
-- [ ] Lazy loading below the fold.
+- [ ] Lazy loading.
 - [ ] Video loading strategy.
 - [ ] Font loading strategy.
 - [ ] Avoid layout shift.
 - [ ] Public-page bundle optimization.
-- [ ] Lighthouse/Core Web Vitals baseline.
+- [ ] Core Web Vitals baseline.
 
-## Visual QA
+### Visual QA
 
-- [ ] Automated mobile screenshots.
-- [ ] Automated tablet screenshots.
-- [ ] Automated desktop screenshots.
-- [ ] Visual regression checks.
+- [ ] Mobile screenshots.
+- [ ] Tablet screenshots.
+- [ ] Desktop screenshots.
+- [ ] Visual regression tests.
 - [ ] Golden fitness page snapshot.
 - [ ] Long-copy regression.
 - [ ] Missing-media regression.
 - [ ] VSL regression.
 - [ ] Before/after regression.
-- [ ] Publish/preview parity regression.
+- [ ] Preview/published parity regression.
 
 ---
 
-# 12. EPIC LP-11 — Template Library Expansion
+# EPIC LP-13 — Entrepreneur Landing Page Strategies
 
-**Goal:** Expand only after the design system and renderer can consistently produce high-quality output.
+**Goal:** Expand beyond the fitness reference while preserving design quality.
 
-Priority order:
+Priority:
 
-1. [ ] Fitness coach — flagship.
-2. [ ] Creator/personal brand.
-3. [ ] Coach/consultant.
-4. [ ] Service business.
-5. [ ] Agency.
-6. [ ] Digital product/lead magnet.
-7. [ ] Webinar/event.
-8. [ ] Local business.
-9. [ ] Product offer.
-10. [ ] Custom AI-generated page.
+1. [ ] Fitness challenge/program.
+2. [ ] Lead-generation offer.
+3. [ ] Application/coaching funnel.
+4. [ ] Digital product.
+5. [ ] Course.
+6. [ ] Book-a-call service.
+7. [ ] Creator/personal brand.
+8. [ ] Webinar/event.
+9. [ ] Agency/service business.
+10. [ ] Product sale.
+11. [ ] Waitlist/launch.
+12. [ ] Custom AI-generated strategy.
 
-Every template must have:
+Every strategy must include:
 
-- [ ] Figma reference design.
+- [ ] Figma reference.
 - [ ] Mobile design.
 - [ ] Desktop design.
 - [ ] Realistic sample content.
-- [ ] Sample imagery.
+- [ ] Sample assets.
 - [ ] Replaceable media.
-- [ ] Preview.
 - [ ] Editable sections.
 - [ ] Responsive behavior.
-- [ ] Connected CTA actions.
+- [ ] Connected CTA action.
+- [ ] Preview.
 - [ ] Publish validation.
 
 ---
 
-# 13. EPIC LP-12 — AI Visual Design QA & Improvement
+# Recommended execution order
 
-**Goal:** Have AI critique generated pages before and after publication.
+## Phase 1 — Design benchmark
 
-## Pre-publish checks
+**LP-1 + LP-2 + LP-3**
 
-- [ ] Missing headline.
-- [ ] Weak CTA.
-- [ ] Too many sections.
-- [ ] Missing social proof.
-- [ ] Missing offer information.
-- [ ] Poor image quality.
-- [ ] Poor image placement.
-- [ ] Typography hierarchy issues.
-- [ ] Excessive spacing.
-- [ ] Insufficient spacing.
-- [ ] Mobile overflow.
-- [ ] Weak conversion path.
-- [ ] Missing trust signals.
-- [ ] Broken links.
+Build the ad strategy model, Figma design system, and gold-standard fitness/ad landing page.
 
-## AI improvement experience
+## Phase 2 — Engineering the design system
 
-Provide a simple **Improve with AI** action with options such as:
+**LP-4 + LP-5**
 
-- [ ] Make it more premium.
-- [ ] Improve conversion.
-- [ ] Improve mobile.
-- [ ] Improve copy.
-- [ ] Improve visual hierarchy.
-- [ ] Improve trust.
-- [ ] Simplify.
-- [ ] Strengthen CTA.
-- [ ] Improve the hero.
+Translate the Figma system into reusable components, section variants, and responsive rendering.
 
-AI changes must be reviewable and reversible.
+## Phase 3 — Mobile creation experience
 
----
+**LP-6 + LP-7**
 
-# 14. Recommended implementation sequence
+Make the entrepreneur workflow fast and make their assets easy to use everywhere.
 
-## Phase 1 — Design foundation
+## Phase 4 — AI designer
 
-**LP-1 + LP-2**
+**LP-8 + LP-9**
 
-Deliver the Figma design system and gold-standard fitness page.
+Move AI from copy generation to page strategy, art direction, composition, and iterative improvement.
 
-## Phase 2 — Renderer foundation
+## Phase 5 — Conversion engine
 
-**LP-3 + LP-5**
+**LP-10**
 
-Build design tokens, component variants, section variants, and responsive rendering.
-
-## Phase 3 — Mobile editor
-
-**LP-4 + LP-6**
-
-Make every section and image easy to edit from a phone.
-
-## Phase 4 — AI generation
-
-**LP-7**
-
-Move AI from copy generation toward full page art direction using structured design specifications.
-
-## Phase 5 — Conversion system
-
-**LP-8**
-
-Add persuasive section architecture and real conversion connections.
+Make the page architecture explicitly optimized for ad traffic and the chosen conversion objective.
 
 ## Phase 6 — Production quality
 
-**LP-9 + LP-10**
+**LP-11 + LP-12**
 
-Harden preview, publishing, performance, accessibility, and visual regression.
+Harden publishing, accessibility, performance, and visual quality.
 
 ## Phase 7 — Scale
 
-**LP-11 + LP-12**
+**LP-13**
 
-Expand templates and introduce AI visual QA/improvement.
+Add additional entrepreneur strategies only after the design system and renderer consistently meet the quality bar.
 
 ---
 
-# 15. Definition of Done — Landing Pages
+# Definition of Done — Flagship Ad Landing Pages
 
-Landing Pages are considered flagship-ready when:
+Landing Pages are flagship-ready when:
 
-- [ ] A first-time user can create a professional page from a phone in approximately 15 minutes.
-- [ ] The fitness coach page meets the Figma gold-standard design.
-- [ ] The design system is tokenized and reusable.
-- [ ] AI chooses page architecture, theme, variants, and content from structured inputs.
-- [ ] Users can replace any image from device, URL, or media library.
-- [ ] Every visible section is directly editable.
-- [ ] Preview works immediately after creation.
-- [ ] Preview and published output are visually consistent.
-- [ ] Mobile, tablet, and desktop layouts are intentional.
-- [ ] Real forms/products/Buy Now actions can be connected.
-- [ ] Pages have SEO, accessibility, performance, and analytics foundations.
-- [ ] Critical flows have automated tests and visual regression coverage.
-- [ ] AI can critique and improve a page without destroying user content or authoritative business data.
+- [ ] An entrepreneur can create a professional ad landing page from a phone in approximately 15 minutes.
+- [ ] The page continues the promise and visual language of the ad.
+- [ ] AI chooses the architecture, visual direction, section variants, image treatments, and CTA strategy.
+- [ ] The generated result looks professionally art-directed rather than template-assembled.
+- [ ] The 390px mobile experience is excellent.
+- [ ] Tablet and desktop layouts are intentionally designed.
+- [ ] Every visible section can be edited easily.
+- [ ] Images can be uploaded from device, URL, or media library and reused.
+- [ ] VSL, forms, products, and CTAs connect to real destinations.
+- [ ] Preview appears immediately after creation.
+- [ ] Preview and published output match.
+- [ ] AI can critique and improve the page without destroying user content.
+- [ ] Pages have accessibility, performance, SEO, and analytics foundations.
+- [ ] Critical flows have automated and visual regression coverage.
+
+## The quality test
+
+> **Can an entrepreneur with zero design/CRO experience provide their offer, ad, photos, and links and produce a page that looks like they paid a professional designer $2,000+ to build it?**
+
+If not, the Landing Page experience is not finished.
