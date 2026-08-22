@@ -1,104 +1,115 @@
 import { Router } from "express";
 import { z } from "zod";
-import { conversionBuilderDocumentSchema, type ConversionBuilderDocument } from "../schemas/conversionBuilder.js";
+import { conversionBuilderDocumentSchema } from "../schemas/conversionBuilder.js";
 import { asyncRoute, requireContext } from "../utils/http.js";
 import { env } from "../config/env.js";
+import {
+  buildDesignSpec,
+  buildFallbackLandingPage,
+  buildLandingPageStrategy,
+  buildLandingPageSystemPrompt,
+  type LandingPageGenerationInput,
+} from "../services/landingPageDesign.js";
 
 export const aiRouter = Router();
 
+const objectiveSchema = z.enum(["lead", "application", "call", "purchase", "signup", "waitlist", "event"]);
+const trafficSourceSchema = z.enum(["instagram", "facebook", "tiktok", "google", "other"]);
+const trafficTemperatureSchema = z.enum(["cold", "warm", "existing"]);
+
 const requestSchema = z.object({
   prompt: z.string().trim().min(10).max(6000),
+  offer: z.string().trim().max(2000).optional(),
+  audience: z.string().trim().max(1000).optional(),
+  outcome: z.string().trim().max(1000).optional(),
+  objective: objectiveSchema.optional(),
+  trafficSource: trafficSourceSchema.optional(),
+  trafficTemperature: trafficTemperatureSchema.optional(),
+  primaryCta: z.string().trim().max(120).optional(),
+  price: z.string().trim().max(100).optional(),
+  brandVoice: z.string().trim().max(500).optional(),
   templateKey: z.string().trim().max(100).optional(),
+  adCopy: z.string().trim().max(6000).optional(),
   currentDocument: conversionBuilderDocumentSchema.optional(),
 });
 
-const SYSTEM_PROMPT = `You are Buy Now's landing-page strategist. Generate a complete mobile-first landing page as JSON for a small business, creator, coach, consultant, or local business. The page must be conversion-focused, concise, professional, and easy to scan on a phone. Use only the allowed builder schema. Do not invent real metrics, customer names, URLs, prices, or credentials. If the user did not provide a real URL, use https://example.com as a placeholder. Prefer sections in this order when appropriate: hero, benefits/content, social-proof, offer, faq, form or cta, footer. Return JSON only with schemaVersion 1, sections, theme, references, and metadata. Each section id must be unique. Each section may contain text, image, button, form, product, testimonial, or faq blocks. For buttons without a real destination use https://example.com. Set metadata.aiGenerated=true and metadata.aiPromptVersion='ai-landing-v1'.`;
+function enrichProviderDocument(document: ReturnType<typeof conversionBuilderDocumentSchema.parse>, input: LandingPageGenerationInput) {
+  const strategy = buildLandingPageStrategy(input);
+  const fallbackSpec = buildDesignSpec(strategy);
 
-function starterHeroAsset(templateKey?: string) {
-  const assets: Record<string, { id: string; alt: string }> = {
-    "fitness-coach": { id: "fitness-hero", alt: "Athlete training with weights in a gym" },
-    coach: { id: "coach-hero", alt: "Fitness training studio" },
-    "creator-brand": { id: "creator-hero", alt: "Creator portrait in natural light" },
-    agency: { id: "agency-hero", alt: "Modern agency workspace" },
-    "service-business": { id: "service-hero", alt: "Professional team collaborating" },
-    "local-business": { id: "local-hero", alt: "Welcoming retail storefront" },
-    "lead-magnet": { id: "magnet-hero", alt: "Notebook and laptop workspace" },
-    waitlist: { id: "waitlist-hero", alt: "Creative product design workspace" },
-    "product-offer": { id: "product-hero", alt: "Minimal premium product photograph" },
-  };
-  return assets[templateKey ?? "creator-brand"] ?? assets["creator-brand"];
-}
-
-function fallbackDocument(prompt: string, templateKey?: string): ConversionBuilderDocument {
-  const lower = prompt.toLowerCase();
-  const fitness = /fitness|trainer|workout|weight loss|gym|body|nutrition|coaching/.test(lower);
-  const coach = /coach|coaching|consultant|consulting/.test(lower);
-  const sell = /sell|product|program|course|offer|buy/.test(lower);
-  const selectedTemplate = templateKey ?? (fitness ? "fitness-coach" : coach ? "coach" : sell ? "product-offer" : "creator-brand");
-  const heroAsset = starterHeroAsset(selectedTemplate);
-  const title = fitness
-    ? "Build the body and confidence you've been working for"
-    : coach
-      ? "A simpler path to your next breakthrough"
-      : sell
-        ? "Get the result you came for"
-        : "Turn your next visitor into your next customer";
-  const subtitle = fitness
-    ? "Personalized training, practical nutrition, and accountability built around your life."
-    : coach
-      ? "A focused, practical approach designed around your goals, priorities, and real-world schedule."
-      : sell
-        ? "See what's included, why it works, and the next step in one polished mobile experience."
-        : "Explain what you do, build trust quickly, and give people one clear next step.";
-  const cta = fitness ? "Apply for coaching" : sell ? "Get started" : coach ? "Book a consultation" : "Get started";
   return conversionBuilderDocumentSchema.parse({
-    schemaVersion: 1,
-    sections: [
-      { id: "ai-hero", type: "hero", visible: true, blocks: [
-        { type: "image", assetId: heroAsset.id, alt: heroAsset.alt },
-        { type: "text", text: title },
-        { type: "text", text: subtitle },
-        { type: "button", label: cta, action: { type: "url", url: "https://example.com" } },
-      ], settings: { variant: selectedTemplate } },
-      { id: "ai-benefits", type: "benefits", visible: true, blocks: [
-        { type: "text", text: fitness ? "Training that fits your schedule" : "A clear process with less friction" },
-        { type: "text", text: fitness ? "Nutrition guidance you can actually follow" : "Practical guidance focused on outcomes" },
-        { type: "text", text: fitness ? "Accountability that keeps you moving" : "One simple next step for interested visitors" },
-      ], settings: {} },
-      { id: "ai-proof", type: "social-proof", visible: true, blocks: [{ type: "testimonial", quote: "Add a real customer result here.", author: "Customer transformation" }], settings: {} },
-      { id: "ai-faq", type: "faq", visible: true, blocks: [{ type: "faq", question: "Is this right for me?", answer: "Customize this answer with your actual audience, offer, and expectations." }], settings: {} },
-      { id: "ai-cta", type: "cta", visible: true, blocks: [{ type: "text", text: "Ready to take the next step?" }, { type: "button", label: cta, action: { type: "url", url: "https://example.com" } }], settings: {} },
-    ],
-    theme: { colors: { primary: fitness ? "#E11D48" : "#0325D9", primaryText: "#FFFFFF", surface: "#FFFFFF", text: "#111111", muted: "#6B7280" }, typography: { fontFamily: "Inter, system-ui, sans-serif" }, buttons: { size: "large" }, spacing: { section: 32 }, radius: { button: 16, card: 20 } },
-    references: [], metadata: { templateKey: selectedTemplate, aiGenerated: true, aiPromptVersion: "fallback-v1" },
+    ...document,
+    designSpec: document.designSpec ?? fallbackSpec,
+    conversionStrategy: document.conversionStrategy ?? strategy.strategy,
+    metadata: {
+      ...document.metadata,
+      templateKey: document.metadata.templateKey ?? strategy.templateKey,
+      aiGenerated: true,
+      aiPromptVersion: "ai-landing-v2",
+      designSpecVersion: document.designSpec?.version ?? 1,
+    },
   });
 }
 
-async function generateWithProvider(prompt: string, templateKey?: string): Promise<ConversionBuilderDocument | null> {
+async function generateWithProvider(input: LandingPageGenerationInput) {
   if (!env.aiApiKey) return null;
+
+  const strategy = buildLandingPageStrategy(input);
   const response = await fetch(`${env.aiBaseUrl.replace(/\/$/, "")}/chat/completions`, {
     method: "POST",
     headers: { Authorization: `Bearer ${env.aiApiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: env.aiModel,
-      temperature: 0.7,
+      temperature: 0.55,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: `${templateKey ? `Preferred template: ${templateKey}\n` : ""}${prompt}` },
+        { role: "system", content: buildLandingPageSystemPrompt() },
+        {
+          role: "user",
+          content: JSON.stringify({
+            prompt: input.prompt,
+            offer: input.offer,
+            audience: input.audience,
+            outcome: input.outcome,
+            objective: strategy.strategy.objective,
+            trafficSource: strategy.strategy.trafficSource,
+            trafficTemperature: strategy.strategy.trafficTemperature,
+            primaryCta: strategy.strategy.primaryCta,
+            price: input.price,
+            brandVoice: input.brandVoice,
+            templateKey: strategy.templateKey,
+            adCopy: input.adCopy,
+            sectionPlan: strategy.sectionPlan,
+            designDirection: strategy.designDirection,
+            trustRequirements: strategy.trustRequirements,
+            currentDocument: input.currentDocument,
+          }),
+        },
       ],
       response_format: { type: "json_object" },
     }),
   });
+
   if (!response.ok) throw new Error(`AI provider request failed: ${response.status}`);
   const body = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
   const content = body.choices?.[0]?.message?.content;
   if (!content) throw new Error("AI provider returned no content");
-  return conversionBuilderDocumentSchema.parse(JSON.parse(content));
+
+  const parsed = conversionBuilderDocumentSchema.parse(JSON.parse(content));
+  return enrichProviderDocument(parsed, input);
 }
 
 aiRouter.post("/landing-page", asyncRoute(async (req, res) => {
   requireContext(req);
-  const input = requestSchema.parse(req.body);
-  const document = await generateWithProvider(input.prompt, input.templateKey).catch(() => null) ?? fallbackDocument(input.prompt, input.templateKey);
-  res.json({ document, provider: env.aiApiKey ? "configured" : "fallback", promptVersion: document.metadata.aiPromptVersion ?? "ai-landing-v1" });
+  const input = requestSchema.parse(req.body) as LandingPageGenerationInput;
+  const strategy = buildLandingPageStrategy(input);
+  const generated = await generateWithProvider(input).catch(() => null);
+  const fallback = generated ? null : buildFallbackLandingPage(input);
+  const document = generated ?? fallback!.document;
+
+  res.json({
+    document,
+    strategy: generated ? strategy : fallback!.strategy,
+    provider: generated ? "configured" : "fallback",
+    promptVersion: document.metadata.aiPromptVersion ?? "ai-landing-v2",
+  });
 }));

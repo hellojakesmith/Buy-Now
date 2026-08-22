@@ -6,7 +6,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/middleware/rateLimit.test.ts src/middleware/csrf.test.ts src/middleware/rbac.test.ts src/utils/auth.test.ts src/schemas/forms.test.ts src/schemas/conversionBuilder.test.ts",
+    "test": "tsx --test src/middleware/rateLimit.test.ts src/middleware/csrf.test.ts src/middleware/rbac.test.ts src/utils/auth.test.ts src/schemas/forms.test.ts src/schemas/conversionBuilder.test.ts src/services/landingPageDesign.test.ts",
     "start": "node dist/server.js"
   },
   "dependencies": {
